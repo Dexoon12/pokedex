@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pokédex Checklist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f2f2f7;color:#1c1c1e}
+
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px}
+#loading h2{font-size:18px;font-weight:600}
+#loading p{font-size:13px;color:#888}
+#pbar-wrap{width:220px;height:5px;background:#e0e0e0;border-radius:3px}
+#pbar{height:5px;background:#e74c3c;border-radius:3px;width:0%;transition:width .25s}
+
+#app{display:none;flex-direction:column;height:100vh;height:100dvh}
+
+#topbar{background:#fff;border-bottom:0.5px solid #ddd;padding:12px 12px 8px;flex-shrink:0}
+#title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
+#title-row h1{font-size:17px;font-weight:700;flex:1}
+
+.icon-btn{
+  width:34px;height:34px;border-radius:10px;border:0.5px solid #ddd;background:#f2f2f7;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;transition:background .15s,border-color .15s;
+}
+.icon-btn:active{transform:scale(0.92)}
+.icon-btn.locked{background:#FF9500;border-color:#FF9500}
+.icon-btn.locked svg{stroke:#fff}
+
+#toast{
+  display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1c1c1e;color:#fff;font-size:13px;padding:8px 18px;
+  border-radius:99px;z-index:99;opacity:0;transition:opacity .2s;white-space:nowrap;
+}
+
+#stats-row{display:flex;gap:6px;margin-bottom:8px}
+.pill{font-size:11px;color:#555;background:#f2f2f7;border:0.5px solid #ddd;border-radius:99px;padding:3px 9px}
+.pill b{color:#1c1c1e;font-weight:600}
+
+#search-row{display:flex;gap:6px;margin-bottom:8px}
+#search{
+  flex:1;font-size:14px;padding:7px 12px;border:0.5px solid #ccc;border-radius:10px;
+  background:#f2f2f7;color:#1c1c1e;outline:none;-webkit-appearance:none;
+}
+#search:focus{border-color:#888;background:#fff}
+#filter-btn{
+  font-size:12px;padding:7px 11px;border:0.5px solid #ccc;border-radius:10px;
+  background:#f2f2f7;color:#555;cursor:pointer;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+#filter-btn.active{background:#e74c3c;color:#fff;border-color:#e74c3c}
+
+#gen-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#gen-scroll::-webkit-scrollbar{display:none}
+.chip{
+  font-size:11px;padding:4px 11px;border-radius:99px;border:0.5px solid #ddd;
+  background:#f2f2f7;color:#555;cursor:pointer;white-space:nowrap;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.chip.active{color:#fff;border-color:transparent}
+
+#grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+
+.pcard{
+  background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;
+  padding:10px 6px 7px;display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;
+  transition:transform .1s,opacity .2s;user-select:none;
+}
+.pcard:active{transform:scale(0.94)}
+.pcard.checked{background:#f0faf4;border-color:#b2dfcb}
+.pcard.checked .pname{color:#2d7a4f;font-weight:700}
+.pcard.checked .pnum{color:#6abf8a}
+
+.gen-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.checkmark{
+  position:absolute;top:5px;right:5px;
+  width:16px;height:16px;border-radius:50%;
+  border:1.5px solid #ddd;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:transparent;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.pcard.checked .checkmark{background:#27AE60;border-color:#27AE60;color:#fff}
+
+.pimg{width:56px;height:56px;image-rendering:pixelated;object-fit:contain;margin-top:2px}
+.pnum{font-size:9px;font-weight:500;color:#bbb;margin-top:3px;line-height:1}
+.pname{font-size:10px;font-weight:600;color:#1c1c1e;text-align:center;line-height:1.2;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+
+#empty{display:none;text-align:center;padding:48px 20px;color:#888;font-size:14px}
+
+/* ── MODAL BASE ── */
+.modal{
+  display:none;position:fixed;inset:0;z-index:50;
+  background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center;
+}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 16px 32px}
+.sheet h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.sheet p{font-size:13px;color:#888;margin-bottom:16px}
+.sheet-option{
+  display:flex;align-items:center;gap:12px;padding:13px 0;
+  border-top:0.5px solid #eee;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.sheet-option:active{opacity:.6}
+.s-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sheet-option div b{font-size:14px;font-weight:600;display:block}
+.sheet-option div span{font-size:12px;color:#888}
+.cancel-btn{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:none;background:#f2f2f7;font-size:15px;font-weight:600;color:#e74c3c;cursor:pointer}
+
+/* ── PRINT ── */
+@media print{
+  @page{size:letter portrait;margin:0}
+  body{background:#fff}
+  #app,#toast,.modal{display:none!important}
+  #print-wrap{display:block!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+#print-wrap{display:none}
+.print-page{
+  width:8.5in;height:11in;overflow:hidden;padding:0.2in 0.2in 0.15in;
+  display:flex;flex-direction:column;page-break-after:always;page-break-inside:avoid;
+}
+.print-header{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid #1a1a2e;padding-bottom:4px;margin-bottom:5px;flex-shrink:0;gap:6px;
+}
+.print-title{font-size:11px;font-weight:900;color:#1a1a2e;letter-spacing:.5px;white-space:nowrap}
+.print-sub{font-size:8px;color:#666;white-space:nowrap}
+.print-legend{display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1;justify-content:center}
+.leg-dot{display:inline-flex;align-items:center;gap:2px;font-size:6px;color:#444}
+.leg-circle{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.print-grid{
+  display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(13,1fr);
+  gap:1px;background:#ddd;flex:1;min-height:0;
+}
+.pcell{
+  background:#fff;border-left:3px solid transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2px 1px;overflow:hidden;position:relative;
+}
+.pcell:nth-child(even){background:#f8f8f8}
+.pcell.done{background:#e8f8ee;outline:1px solid #27AE60;outline-offset:-1px}
+.pcell-check{position:absolute;top:2px;right:2px;font-size:8px;font-weight:900;line-height:1;color:transparent}
+.pcell.done .pcell-check{color:#27AE60}
+.pcell-circle{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;border:1px solid #ccc;background:#fff}
+.pcell.done .pcell-circle{display:none}
+.pcell-img{width:34px;height:34px;image-rendering:pixelated;object-fit:contain}
+.pcell-num{font-size:6.5px;font-weight:700;line-height:1;margin-top:1px}
+.pcell-name{font-size:6px;color:#333;text-align:center;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.pcell.done .pcell-name{font-weight:700}
+.pcell-blank{background:#f0f0f0;outline:none}
+
+#import-file{display:none}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <h2>Pokédex Checklist</h2>
+  <div id="pbar-wrap"><div id="pbar"></div></div>
+  <p id="lmsg">Conectando con PokéAPI...</p>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <div id="title-row">
+      <h1>Pokédex</h1>
+      <!-- Lock -->
+      <div class="icon-btn" id="lock-btn">
+        <svg id="lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <!-- Backup -->
+      <div class="icon-btn" id="backup-btn" title="Guardar / Restaurar progreso">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <!-- Share -->
+      <div class="icon-btn" id="share-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </div>
+    </div>
+    <div id="stats-row">
+      <span class="pill"><b id="s-checked">0</b> capturados</span>
+      <span class="pill">de <b>1025</b></span>
+      <span class="pill"><b id="s-pct">0%</b></span>
+    </div>
+    <div id="search-row">
+      <input id="search" type="search" placeholder="Nombre o número...">
+      <button id="filter-btn">Pendientes</button>
+    </div>
+    <div id="gen-scroll">
+      <span class="chip active" data-gen="0">Todos</span>
+    </div>
+  </div>
+  <div id="grid-wrap">
+    <div id="grid"></div>
+    <div id="empty">No se encontraron Pokémon</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="import-file" accept=".json">
+
+<!-- Backup modal -->
+<div class="modal" id="backup-modal">
+  <div class="sheet">
+    <h2>💾 Guardar / Restaurar</h2>
+    <p>Guarda tu progreso como archivo para no perderlo nunca</p>
+    <div class="sheet-option" id="opt-export">
+      <div class="s-icon" style="background:#e3f2fd">📥</div>
+      <div><b>Guardar progreso</b><span>Descarga un archivo .json con tus datos</span></div>
+    </div>
+    <div class="sheet-option" id="opt-import">
+      <div class="s-icon" style="background:#fce4ec">📤</div>
+      <div><b>Restaurar progreso</b><span>Carga un archivo .json guardado antes</span></div>
+    </div>
+    <button class="cancel-btn" id="cancel-backup">Cancelar</button>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="modal" id="share-modal">
+  <div class="sheet">
+    <h2>Compartir progreso</h2>
+    <p id="share-subtitle"></p>
+    <div class="sheet-option" id="opt-print">
+      <div class="s-icon" style="background:#fff3e0">📄</div>
+      <div><b>Guardar como PDF</b><span>Grilla visual igual a la app</span></div>
+    </div>
+    <div class="sheet-option" id="opt-share">
+      <div class="s-icon" style="background:#e8f5e9">🔗</div>
+      <div><b>Compartir texto</b><span>Resumen por generación</span></div>
+    </div>
+    <button class="cancel-btn" id="cancel-share">Cancelar</button>
+  </div>
+</div>
+
+<div id="print-wrap"></div>
+
+<script>
+const GENS=[
+  {n:"Gen I",   s:1,   e:151,  c:"#E74C3C"},
+  {n:"Gen II",  s:152, e:251,  c:"#E67E22"},
+  {n:"Gen III", s:252, e:386,  c:"#D4AC0D"},
+  {n:"Gen IV",  s:387, e:493,  c:"#27AE60"},
+  {n:"Gen V",   s:494, e:649,  c:"#2980B9"},
+  {n:"Gen VI",  s:650, e:721,  c:"#9B59B6"},
+  {n:"Gen VII", s:722, e:809,  c:"#16A085"},
+  {n:"Gen VIII",s:810, e:905,  c:"#E91E63"},
+  {n:"Gen IX",  s:906, e:1025, c:"#795548"},
+];
+const SPRITE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
+const STORAGE_KEY="pokedex-checked-v1";
+const COLS=14,ROWS=13,PER_PAGE=COLS*ROWS;
+
+let allMons=[],checked={},filterPending=false,activeGen=0,query="",locked=false;
+
+function genOf(n){return GENS.find(g=>n>=g.s&&n<=g.e)||GENS[0]}
+function loadChecked(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)checked=JSON.parse(s);}catch(e){checked={};}}
+function saveChecked(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(checked));}catch(e){}}
+
+function updateStats(){
+  const n=Object.values(checked).filter(Boolean).length;
+  document.getElementById('s-checked').textContent=n;
+  document.getElementById('s-pct').textContent=Math.round(n/1025*100)+'%';
+}
+
+function showToast(msg,duration=1800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  setTimeout(()=>t.style.opacity='1',10);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',200);},duration);
+}
+
+function visible(mon){
+  if(filterPending&&checked[mon.num])return false;
+  if(activeGen!==0){const g=GENS[activeGen-1];if(mon.num<g.s||mon.num>g.e)return false;}
+  if(query){const q=query.toLowerCase();if(!mon.name.toLowerCase().includes(q)&&!String(mon.num).includes(q))return false;}
+  return true;
+}
+
+function renderGrid(){
+  const grid=document.getElementById('grid');
+  const empty=document.getElementById('empty');
+  const vis=allMons.filter(visible);
+  grid.innerHTML='';
+  if(!vis.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  const frag=document.createDocumentFragment();
+  vis.forEach(mon=>{
+    const g=genOf(mon.num);
+    const isChecked=!!checked[mon.num];
+    const div=document.createElement('div');
+    div.className='pcard'+(isChecked?' checked':'');
+    div.dataset.num=mon.num;
+    div.innerHTML=`
+      <div class="gen-bar" style="background:${g.c}"></div>
+      <div class="checkmark">✓</div>
+      <img class="pimg" src="${SPRITE}${mon.num}.png" alt="${mon.name}" loading="lazy" onerror="this.style.opacity='.2'">
+      <span class="pnum">#${String(mon.num).padStart(4,'0')}</span>
+      <span class="pname">${mon.name}</span>`;
+    div.addEventListener('click',()=>{
+      if(locked){showToast('🔒 Pantalla bloqueada');return;}
+      toggle(mon.num,div);
+    });
+    frag.appendChild(div);
+  });
+  grid.appendChild(frag);
+}
+
+function toggle(num,el){
+  checked[num]=!checked[num];
+  el.classList.toggle('checked',checked[num]);
+  updateStats();saveChecked();
+  if(filterPending&&checked[num]){el.style.opacity='0';setTimeout(()=>el.remove(),200);}
+}
+
+// Lock
+document.getElementById('lock-btn').addEventListener('click',()=>{
+  locked=!locked;
+  document.getElementById('lock-btn').classList.toggle('locked',locked);
+  document.getElementById('lock-icon').innerHTML=locked
+    ?`<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>`
+    :`<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`;
+  showToast(locked?'🔒 Pantalla bloqueada':'🔓 Pantalla desbloqueada');
+});
+
+// ── BACKUP: EXPORT ──
+function exportProgress(){
+  const n=Object.values(checked).filter(Boolean).length;
+  const data={
+    version:1,
+    date:new Date().toISOString(),
+    captured:n,
+    total:1025,
+    checked:checked
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`pokedex-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ Guardado: ${n} capturados`,2200);
+}
+
+// ── BACKUP: IMPORT ──
+function importProgress(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.checked)throw new Error('Formato inválido');
+      const prev=Object.values(checked).filter(Boolean).length;
+      checked=data.checked;
+      saveChecked();
+      updateStats();
+      renderGrid();
+      const n=Object.values(checked).filter(Boolean).length;
+      showToast(`✅ Restaurado: ${n} capturados`,2500);
+    }catch(err){
+      showToast('❌ Archivo inválido',2000);
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('backup-btn').addEventListener('click',()=>{
+  document.getElementById('backup-modal').classList.add('open');
+});
+document.getElementById('cancel-backup').addEventListener('click',()=>document.getElementById('backup-modal').classList.remove('open'));
+document.getElementById('backup-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('backup-modal'))document.getElementById('backup-modal').classList.remove('open');
+});
+document.getElementById('opt-export').addEventListener('click',()=>{
+  document.getElementById('backup-modal').classList.remove('open');
+  exportProgress();
+});
+document.getElementById('opt-import').addEventListener('click',()=>{
+  document.getElementById('backup-modal').classList.remove('open');
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change',e=>{
+  if(e.target.files[0])importProgress(e.target.files[0]);
+  e.target.value='';
+});
+
+// ── PRINT ──
+function legendHTML(){
+  return GENS.map(g=>`<span class="leg-dot"><span class="leg-circle" style="background:${g.c}"></span>${g.n}</span>`).join('');
+}
+function buildPrintGrid(){
+  const wrap=document.getElementById('print-wrap');
+  wrap.innerHTML='';
+  const totalPages=Math.ceil(allMons.length/PER_PAGE);
+  const n=Object.values(checked).filter(Boolean).length;
+  const pct=Math.round(n/1025*100);
+  for(let p=0;p<totalPages;p++){
+    const slice=allMons.slice(p*PER_PAGE,(p+1)*PER_PAGE);
+    const blanks=PER_PAGE-slice.length;
+    const cells=slice.map(mon=>{
+      const g=genOf(mon.num);
+      const isDone=!!checked[mon.num];
+      const short=mon.name.length>13?mon.name.slice(0,12)+'…':mon.name;
+      return `<div class="pcell${isDone?' done':''}" style="border-left-color:${g.c}">
+        <span class="pcell-check">✓</span>
+        <div class="pcell-circle"></div>
+        <img class="pcell-img" src="${SPRITE}${mon.num}.png" alt="${mon.name}" loading="lazy" onerror="this.style.opacity='.15'">
+        <span class="pcell-num" style="color:${g.c}">#${String(mon.num).padStart(4,'0')}</span>
+        <span class="pcell-name">${short}</span>
+      </div>`;
+    }).join('');
+    const blankCells=Array(blanks).fill('<div class="pcell pcell-blank"></div>').join('');
+    const page=document.createElement('div');
+    page.className='print-page';
+    page.innerHTML=`
+      <div class="print-header">
+        <span class="print-title">POKÉDEX CHECKLIST</span>
+        <div class="print-legend">${legendHTML()}</div>
+        <span class="print-sub">${n}/1025 (${pct}%) · ${p+1}/${totalPages}</span>
+      </div>
+      <div class="print-grid">${cells}${blankCells}</div>`;
+    wrap.appendChild(page);
+  }
+}
+
+// ── SHARE ──
+document.getElementById('share-btn').addEventListener('click',()=>{
+  const n=Object.values(checked).filter(Boolean).length;
+  document.getElementById('share-subtitle').textContent=`${n}/1025 · ${Math.round(n/1025*100)}%`;
+  document.getElementById('share-modal').classList.add('open');
+});
+document.getElementById('cancel-share').addEventListener('click',()=>document.getElementById('share-modal').classList.remove('open'));
+document.getElementById('share-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('share-modal'))document.getElementById('share-modal').classList.remove('open');
+});
+document.getElementById('opt-print').addEventListener('click',()=>{
+  document.getElementById('share-modal').classList.remove('open');
+  buildPrintGrid();
+  setTimeout(()=>window.print(),200);
+});
+document.getElementById('opt-share').addEventListener('click',()=>{
+  document.getElementById('share-modal').classList.remove('open');
+  const n=Object.values(checked).filter(Boolean).length;
+  let txt=`Pokédex Checklist — ${n}/1025 (${Math.round(n/1025*100)}%)\n\n`;
+  GENS.forEach(g=>{
+    const total=g.e-g.s+1;
+    const done=allMons.filter(m=>m.num>=g.s&&m.num<=g.e&&checked[m.num]).length;
+    txt+=`${g.n}: ${done}/${total}\n`;
+  });
+  if(navigator.share)navigator.share({title:'Pokédex Checklist',text:txt}).catch(()=>{});
+  else navigator.clipboard.writeText(txt).then(()=>showToast('Copiado al portapapeles')).catch(()=>prompt('Copia tu progreso:',txt));
+});
+
+// ── INIT ──
+async function init(){
+  loadChecked();
+  const lmsg=document.getElementById('lmsg');
+  const pbar=document.getElementById('pbar');
+  pbar.style.width='15%';
+  let names;
+  try{
+    const r=await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025&offset=0");
+    const d=await r.json();
+    names=d.results.map(p=>p.name.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-'));
+    pbar.style.width='90%';
+  }catch(e){lmsg.textContent='Error de conexión. Revisa tu internet.';return;}
+  allMons=names.map((name,i)=>({num:i+1,name}));
+  pbar.style.width='100%';
+  await new Promise(r=>setTimeout(r,200));
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='flex';
+
+  const genScroll=document.getElementById('gen-scroll');
+  GENS.forEach((g,i)=>{
+    const chip=document.createElement('span');
+    chip.className='chip';chip.dataset.gen=i+1;chip.textContent=g.n;
+    chip.addEventListener('click',()=>{
+      activeGen=i+1;
+      document.querySelectorAll('.chip').forEach(c=>{
+        const on=c.dataset.gen==activeGen;
+        c.classList.toggle('active',on);
+        c.style.background=on?g.c:'';c.style.borderColor=on?g.c:'';c.style.color=on?'#fff':'';
+      });
+      renderGrid();
+    });
+    genScroll.appendChild(chip);
+  });
+  document.querySelector('.chip[data-gen="0"]').addEventListener('click',()=>{
+    activeGen=0;
+    document.querySelectorAll('.chip').forEach(c=>{
+      const on=c.dataset.gen=='0';c.classList.toggle('active',on);
+      c.style.background='';c.style.borderColor='';c.style.color='';
+    });
+    renderGrid();
+  });
+
+  document.getElementById('search').addEventListener('input',e=>{query=e.target.value;renderGrid();});
+  document.getElementById('filter-btn').addEventListener('click',()=>{
+    filterPending=!filterPending;
+    document.getElementById('filter-btn').classList.toggle('active',filterPending);
+    renderGrid();
+  });
+
+  updateStats();
+  renderGrid();
+}
+init();
+</script>
+</body>
+</html>
