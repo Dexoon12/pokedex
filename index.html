@@ -883,37 +883,36 @@ function showApp() {
 
 // ── Landing page ──────────────────────────────────────────────────
 async function landingCreate() {
-  const btn  = document.getElementById('land-crear');
+  const btn   = document.getElementById('land-crear');
   const errEl = document.getElementById('land-error');
   if (btn) { btn.textContent = 'Creando...'; btn.disabled = true; }
   if (errEl) errEl.textContent = '';
 
+  // Desde archivo local el navegador bloquea peticiones externas
+  if (location.protocol === 'file:') {
+    if (btn)  { btn.textContent = '☁️ Crear sala'; btn.disabled = false; }
+    if (errEl) errEl.textContent = 'Usa la URL de GitHub Pages, no el archivo local';
+    return;
+  }
+
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 12000);
     const r = await fetch(`${JB_API}/b`, {
       method: 'POST',
-      signal: ctrl.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JB_KEY,
-        'X-Bin-Private': 'false'
-      },
-      body: JSON.stringify(Object.keys(checked).length ? checked : {'_init': true})
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY },
+      body: JSON.stringify(Object.keys(checked).length ? checked : {_init: true})
     });
-    clearTimeout(t);
     const text = await r.text();
-    if (!r.ok) throw new Error(`Error ${r.status}: ${text.slice(0,120)}`);
+    if (!r.ok) throw new Error(`Error ${r.status}: ${text.slice(0, 120)}`);
     const d = JSON.parse(text);
     const id = d.metadata?.id;
     if (!id) throw new Error('Sin ID en respuesta');
     binId = id; localStorage.setItem(BIN_ID_KEY, id);
     updateSyncBtn();
     showApp();
-    setTimeout(() => showToast('Sala creada ✓  Código: ' + id, 5000), 300);
+    setTimeout(() => showToast('Sala creada ✓  Código: ' + id, 6000), 300);
   } catch(e) {
     if (btn)  { btn.textContent = '☁️ Crear sala'; btn.disabled = false; }
-    if (errEl) errEl.textContent = e.name === 'AbortError' ? 'Tiempo de espera agotado' : e.message;
+    if (errEl) errEl.textContent = e.message || 'Error de red';
   }
 }
 
