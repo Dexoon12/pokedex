@@ -79,6 +79,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
 .sheet-option div span{font-size:12px;color:#888}
 .cancel-btn{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:none;background:#f2f2f7;font-size:15px;font-weight:600;color:#e74c3c;cursor:pointer}
 
+/* ── Landing ── */
+#landing{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;background:#1a1a2e;padding:32px 24px;text-align:center}
+.land-ball{width:76px;height:76px;border-radius:50%;background:linear-gradient(#e74c3c 50%,#fff 50%);border:4px solid rgba(255,255,255,.15);margin:0 auto 20px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.land-ball::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;background:#fff;border-radius:50%;border:3px solid rgba(255,255,255,.15)}
+.land-title{font-size:38px;font-weight:900;color:#fff;letter-spacing:3px;margin-bottom:6px}
+.land-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:44px;letter-spacing:.5px}
+.land-btn{width:100%;max-width:300px;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:11px;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .1s,opacity .15s;-webkit-tap-highlight-color:transparent}
+.land-btn:active{transform:scale(.96)}
+.land-btn-primary{background:#e74c3c;color:#fff}
+.land-btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.18)}
+.land-btn-ghost{background:transparent;color:rgba(255,255,255,.35);font-size:12px;padding:10px;margin-bottom:0}
+.land-label{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.land-input{width:100%;max-width:300px;font-size:15px;padding:13px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;outline:none;font-family:monospace;margin-bottom:10px;text-align:center;letter-spacing:1px}
+.land-input::placeholder{color:rgba(255,255,255,.25)}
+.land-input:focus{border-color:rgba(231,76,60,.6)}
+.land-back{background:transparent;border:none;color:rgba(255,255,255,.35);font-size:12px;padding:10px;cursor:pointer;margin-top:4px;display:block;width:100%;max-width:300px;text-align:center}
+.land-error{font-size:12px;color:#e74c3c;margin-bottom:8px;min-height:16px}
+
 @media print{
   @page{size:letter portrait;margin:0}
   body{background:#fff}
@@ -113,6 +131,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
   <h2>Pokédex Checklist</h2>
   <div id="pbar-wrap"><div id="pbar"></div></div>
   <p id="lmsg">Conectando con PokéAPI...</p>
+</div>
+
+<div id="landing">
+  <div class="land-ball"></div>
+  <h1 class="land-title">POKÉDEX</h1>
+  <p class="land-sub">CHECKLIST COMPARTIDO</p>
+  <div id="land-content">
+    <button class="land-btn land-btn-primary" id="land-crear">☁️ Crear sala</button>
+    <button class="land-btn land-btn-secondary" id="land-unirse">🔗 Unirse a sala</button>
+    <button class="land-btn land-btn-ghost" id="land-skip">Continuar sin sincronización</button>
+  </div>
 </div>
 
 <div id="app">
@@ -839,6 +868,88 @@ document.getElementById('filter-btn').addEventListener('click', () => {
   renderGrid();
 });
 
+// ── Show app ──────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  buildSectionTabs();
+  buildGenChips();
+  updateStats();
+  renderGrid();
+  loadFormSprites();
+}
+
+// ── Landing page ──────────────────────────────────────────────────
+async function landingCreate() {
+  const btn = document.getElementById('land-crear');
+  if (btn) { btn.textContent = 'Creando...'; btn.disabled = true; }
+  let id = null;
+  try {
+    const r = await jbFetch(`${JB_API}/b`, {
+      method: 'POST',
+      headers: { 'X-Bin-Private': 'false' },
+      body: JSON.stringify(checked)
+    });
+    const d = await r.json();
+    id = d.metadata?.id || null;
+  } catch(e) { console.error('jbCreate error:', e); }
+
+  if (id) {
+    binId = id; localStorage.setItem(BIN_ID_KEY, id);
+    updateSyncBtn();
+    showApp();
+    setTimeout(() => showToast('Sala creada ✓ Código: ' + id.slice(-6).toUpperCase(), 4000), 300);
+  } else {
+    if (btn) { btn.textContent = '☁️ Crear sala'; btn.disabled = false; }
+    const err = document.getElementById('land-error');
+    if (err) err.textContent = 'Error al crear sala. Intenta de nuevo.';
+  }
+}
+
+function showLandingJoin() {
+  document.getElementById('land-content').innerHTML = `
+    <p class="land-label">Código de sala</p>
+    <input id="land-code" class="land-input" type="text" placeholder="Pega el código aquí" autocomplete="off" spellcheck="false">
+    <div id="land-error" class="land-error"></div>
+    <button class="land-btn land-btn-primary" id="land-conectar">🔗 Conectar</button>
+    <button class="land-back" id="land-back">← Volver</button>`;
+  document.getElementById('land-code').focus();
+  document.getElementById('land-back').addEventListener('click', showLandingMain);
+  document.getElementById('land-conectar').addEventListener('click', async () => {
+    const input = document.getElementById('land-code').value.trim();
+    if (!input) { document.getElementById('land-error').textContent = 'Ingresa un código'; return; }
+    const btn = document.getElementById('land-conectar');
+    btn.textContent = 'Conectando...'; btn.disabled = true;
+    const prev = binId; binId = input;
+    const remote = await jbLoad();
+    if (remote) {
+      localStorage.setItem(BIN_ID_KEY, input);
+      Object.keys(remote).forEach(k => { if (remote[k]) checked[k] = true; });
+      saveChecked(); updateSyncBtn();
+      showApp();
+      setTimeout(() => showToast('Sala conectada ✓'), 300);
+    } else {
+      binId = prev;
+      btn.textContent = '🔗 Conectar'; btn.disabled = false;
+      document.getElementById('land-error').textContent = 'Código inválido. Verifica e intenta de nuevo.';
+    }
+  });
+}
+
+function showLandingMain() {
+  document.getElementById('land-content').innerHTML = `
+    <button class="land-btn land-btn-primary" id="land-crear">☁️ Crear sala</button>
+    <button class="land-btn land-btn-secondary" id="land-unirse">🔗 Unirse a sala</button>
+    <button class="land-btn land-btn-ghost" id="land-skip">Continuar sin sincronización</button>`;
+  document.getElementById('land-crear').addEventListener('click', landingCreate);
+  document.getElementById('land-unirse').addEventListener('click', showLandingJoin);
+  document.getElementById('land-skip').addEventListener('click', () => showApp());
+}
+
+document.getElementById('land-crear').addEventListener('click', landingCreate);
+document.getElementById('land-unirse').addEventListener('click', showLandingJoin);
+document.getElementById('land-skip').addEventListener('click', () => showApp());
+
 // ── Sync modal ────────────────────────────────────────────────────
 function updateSyncBtn() {
   document.getElementById('sync-btn').classList.toggle('synced', !!binId);
@@ -961,25 +1072,23 @@ async function init() {
     return;
   }
 
-  // Cargar desde sala sync si está conectado (merge: unión de ambos)
+  pbar.style.width = '100%';
+  await new Promise(r => setTimeout(r, 150));
+  document.getElementById('loading').style.display = 'none';
+
+  if (!binId) {
+    // Sin sala: mostrar landing
+    document.getElementById('landing').style.display = 'flex';
+    return;
+  }
+
+  // Cargar desde sala sync (merge: unión de ambos)
   const remote = await jbLoad();
   if (remote) {
     Object.keys(remote).forEach(k => { if (remote[k]) checked[k] = true; });
     saveChecked();
   }
-
-  pbar.style.width = '100%';
-  await new Promise(r => setTimeout(r, 150));
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-
-  buildSectionTabs();
-  buildGenChips();
-  updateStats();
-  renderGrid();
-
-  // Sprites de formas en background (no bloquea la UI)
-  loadFormSprites();
+  showApp();
 }
 
 init();
