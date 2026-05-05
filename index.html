@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pokédex Checklist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f2f2f7;color:#1c1c1e}
+
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px}
+#loading h2{font-size:18px;font-weight:600}
+#loading p{font-size:13px;color:#888}
+#pbar-wrap{width:220px;height:5px;background:#e0e0e0;border-radius:3px}
+#pbar{height:5px;background:#e74c3c;border-radius:3px;width:0%;transition:width .3s}
+
+#app{display:none;flex-direction:column;height:100vh;height:100dvh}
+
+#topbar{background:#fff;border-bottom:0.5px solid #ddd;padding:10px 12px 6px;flex-shrink:0}
+#title-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+#title-row h1{font-size:17px;font-weight:700;flex:1}
+.icon-btn{width:34px;height:34px;border-radius:10px;border:0.5px solid #ddd;background:#f2f2f7;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn.locked{background:#FF9500;border-color:#FF9500}
+.icon-btn.locked svg{stroke:#fff}
+.icon-btn.synced{background:#27AE60;border-color:#27AE60}
+.icon-btn.synced svg{stroke:#fff}
+
+#stats-row{display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap}
+.pill{font-size:11px;color:#555;background:#f2f2f7;border:0.5px solid #ddd;border-radius:99px;padding:3px 9px}
+.pill b{color:#1c1c1e;font-weight:600}
+
+#section-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none;margin-bottom:5px}
+#section-scroll::-webkit-scrollbar{display:none}
+.sec-chip{font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;border:1.5px solid #ddd;background:#f2f2f7;color:#555;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.sec-chip.active{color:#fff;border-color:transparent}
+.sec-badge{font-size:9px;opacity:.8;margin-left:2px}
+
+#gen-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none;margin-bottom:5px}
+#gen-scroll::-webkit-scrollbar{display:none}
+#gen-scroll.hidden{display:none}
+.chip{font-size:11px;padding:4px 11px;border-radius:99px;border:0.5px solid #ddd;background:#f2f2f7;color:#555;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.chip.active{color:#fff;border-color:transparent}
+
+#search-row{display:flex;gap:6px}
+#search{flex:1;font-size:14px;padding:7px 12px;border:0.5px solid #ccc;border-radius:10px;background:#f2f2f7;color:#1c1c1e;outline:none;-webkit-appearance:none}
+#search:focus{border-color:#888;background:#fff}
+#filter-btn{font-size:12px;padding:7px 11px;border:0.5px solid #ccc;border-radius:10px;background:#f2f2f7;color:#555;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#filter-btn.active{background:#e74c3c;color:#fff;border-color:#e74c3c}
+
+#grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+
+.pcard{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;padding:10px 6px 7px;display:flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:transform .1s,opacity .2s;user-select:none}
+.pcard:active{transform:scale(.94)}
+.pcard.checked{background:#f0faf4;border-color:#b2dfcb}
+.pcard.checked .pname{color:#2d7a4f;font-weight:700}
+.pcard.checked .pnum{color:#6abf8a}
+.gen-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.checkmark{position:absolute;top:5px;right:5px;width:16px;height:16px;border-radius:50%;border:1.5px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:transparent;transition:background .15s,border-color .15s,color .15s}
+.pcard.checked .checkmark{background:#27AE60;border-color:#27AE60;color:#fff}
+.pimg{width:56px;height:56px;image-rendering:pixelated;object-fit:contain;margin-top:2px}
+.pimg-ph{width:56px;height:56px;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc}
+.pnum{font-size:9px;font-weight:500;color:#bbb;margin-top:3px;line-height:1}
+.pname{font-size:10px;font-weight:600;color:#1c1c1e;text-align:center;line-height:1.2;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+#empty{display:none;text-align:center;padding:48px 20px;color:#888;font-size:14px}
+
+#toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;font-size:13px;padding:8px 18px;border-radius:99px;z-index:99;opacity:0;transition:opacity .2s;white-space:nowrap}
+
+.modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 16px 32px}
+.sheet h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.sheet p{font-size:13px;color:#888;margin-bottom:16px}
+.sheet-option{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:0.5px solid #eee;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sheet-option:active{opacity:.6}
+.s-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sheet-option div b{font-size:14px;font-weight:600;display:block}
+.sheet-option div span{font-size:12px;color:#888}
+.cancel-btn{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:none;background:#f2f2f7;font-size:15px;font-weight:600;color:#e74c3c;cursor:pointer}
+
+@media print{
+  @page{size:letter portrait;margin:0}
+  body{background:#fff}
+  #app,#toast,.modal{display:none!important}
+  #print-wrap{display:block!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+#print-wrap{display:none}
+.print-page{width:8.5in;height:11in;overflow:hidden;padding:.2in .2in .15in;display:flex;flex-direction:column;page-break-after:always;page-break-inside:avoid}
+.print-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a1a2e;padding-bottom:4px;margin-bottom:5px;flex-shrink:0;gap:6px}
+.print-title{font-size:11px;font-weight:900;color:#1a1a2e;letter-spacing:.5px}
+.print-sub{font-size:8px;color:#666}
+.print-grid{display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(13,1fr);gap:1px;background:#ddd;flex:1;min-height:0}
+.pcell{background:#fff;border-left:3px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px 1px;overflow:hidden;position:relative}
+.pcell:nth-child(even){background:#f8f8f8}
+.pcell.done{background:#e8f8ee;outline:1px solid #27AE60;outline-offset:-1px}
+.pcell-check{position:absolute;top:2px;right:2px;font-size:8px;font-weight:900;line-height:1;color:transparent}
+.pcell.done .pcell-check{color:#27AE60}
+.pcell-circle{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;border:1px solid #ccc;background:#fff}
+.pcell.done .pcell-circle{display:none}
+.pcell-img{width:34px;height:34px;image-rendering:pixelated;object-fit:contain}
+.pcell-num{font-size:6.5px;font-weight:700;line-height:1;margin-top:1px}
+.pcell-name{font-size:6px;color:#333;text-align:center;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.pcell.done .pcell-name{font-weight:700}
+.pcell-blank{background:#f0f0f0}
+#import-file{display:none}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <h2>Pokédex Checklist</h2>
+  <div id="pbar-wrap"><div id="pbar"></div></div>
+  <p id="lmsg">Conectando con PokéAPI...</p>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <div id="title-row">
+      <h1>Pokédex</h1>
+      <div class="icon-btn" id="lock-btn">
+        <svg id="lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="icon-btn" id="backup-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="icon-btn" id="share-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </div>
+      <div class="icon-btn" id="sync-btn" title="Sincronizar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </div>
+    </div>
+    <div id="stats-row">
+      <span class="pill" id="pill-sec"></span>
+      <span class="pill" id="pill-total"></span>
+      <span class="pill" id="pill-pct"></span>
+    </div>
+    <div id="section-scroll"></div>
+    <div id="gen-scroll"><span class="chip active" data-gen="0">Todos</span></div>
+    <div id="search-row">
+      <input id="search" type="search" placeholder="Nombre o número...">
+      <button id="filter-btn">Pendientes</button>
+    </div>
+  </div>
+  <div id="grid-wrap">
+    <div id="grid"></div>
+    <div id="empty">No se encontraron Pokémon</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="import-file" accept=".json">
+
+<div class="modal" id="backup-modal">
+  <div class="sheet">
+    <h2>Guardar / Restaurar</h2>
+    <p>Guarda tu progreso como archivo para no perderlo</p>
+    <div class="sheet-option" id="opt-export">
+      <div class="s-icon" style="background:#e3f2fd">⬇️</div>
+      <div><b>Guardar progreso</b><span>Descarga un archivo .json con tus datos</span></div>
+    </div>
+    <div class="sheet-option" id="opt-import">
+      <div class="s-icon" style="background:#fce4ec">⬆️</div>
+      <div><b>Restaurar progreso</b><span>Carga un archivo .json guardado antes</span></div>
+    </div>
+    <button class="cancel-btn" id="cancel-backup">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="share-modal">
+  <div class="sheet">
+    <h2>Compartir progreso</h2>
+    <p id="share-subtitle"></p>
+    <div class="sheet-option" id="opt-print">
+      <div class="s-icon" style="background:#fff3e0">🖨️</div>
+      <div><b>Guardar como PDF</b><span>Grilla visual de la sección actual</span></div>
+    </div>
+    <div class="sheet-option" id="opt-share">
+      <div class="s-icon" style="background:#e8f5e9">📤</div>
+      <div><b>Compartir texto</b><span>Resumen por sección</span></div>
+    </div>
+    <button class="cancel-btn" id="cancel-share">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="sync-modal">
+  <div class="sheet">
+    <h2>Sincronización</h2>
+    <p id="sync-subtitle">Comparte el progreso en tiempo real</p>
+    <div id="sync-body"></div>
+    <button class="cancel-btn" id="cancel-sync">Cerrar</button>
+  </div>
+</div>
+
+<div id="print-wrap"></div>
+
+<script>
+// ── JSONBin sync ──────────────────────────────────────────────────
+const JB_KEY    = '$2a$10$syaZLHDY0FmHv478g/B4zeGzvTH7rz0ZVkgmaYg8hQXTzJkrYeTDW';
+const JB_API    = 'https://api.jsonbin.io/v3';
+const BIN_ID_KEY = 'pokedex-bin-id';
+
+let binId     = localStorage.getItem(BIN_ID_KEY) || '';
+let _saveTimer = null;
+
+async function jbFetch(url, opts = {}) {
+  const { headers: extra = {}, ...rest } = opts;
+  return fetch(url, {
+    ...rest,
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY, ...extra }
+  });
+}
+async function jbSave(data) {
+  if (!binId) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try { await jbFetch(`${JB_API}/b/${binId}`, { method:'PUT', body:JSON.stringify(data) }); }
+    catch {}
+  }, 2000);
+}
+async function jbLoad() {
+  if (!binId) return null;
+  try {
+    const r = await jbFetch(`${JB_API}/b/${binId}/latest`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.record;
+  } catch { return null; }
+}
+async function jbCreate() {
+  try {
+    const r = await jbFetch(`${JB_API}/b`, {
+      method: 'POST',
+      headers: { 'X-Bin-Private': 'false' },
+      body: JSON.stringify(checked)
+    });
+    const d = await r.json();
+    return d.metadata?.id || null;
+  } catch { return null; }
+}
+
+// ── Constantes ────────────────────────────────────────────────────
+const SPRITE      = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const STORAGE_KEY = 'pokedex-checked-v2';
+const SPRITES_KEY = 'form-sprites-v1';
+const COLS = 14, ROWS = 13, PER_PAGE = COLS * ROWS;
+
+const GENS = [
+  {n:'Gen I',   s:1,   e:151,  c:'#E74C3C'},
+  {n:'Gen II',  s:152, e:251,  c:'#E67E22'},
+  {n:'Gen III', s:252, e:386,  c:'#D4AC0D'},
+  {n:'Gen IV',  s:387, e:493,  c:'#27AE60'},
+  {n:'Gen V',   s:494, e:649,  c:'#2980B9'},
+  {n:'Gen VI',  s:650, e:721,  c:'#9B59B6'},
+  {n:'Gen VII', s:722, e:809,  c:'#16A085'},
+  {n:'Gen VIII',s:810, e:905,  c:'#E91E63'},
+  {n:'Gen IX',  s:906, e:1025, c:'#795548'},
+];
+
+const SECTIONS = [
+  {id:'base',    label:'Base',     color:'#3B82F6'},
+  {id:'mega',    label:'Mega',     color:'#8B6914'},
+  {id:'gmax',    label:'GMax',     color:'#1B5E20'},
+  {id:'alolan',  label:'Alolan',   color:'#E67E22'},
+  {id:'galarian',label:'Galarian', color:'#6C3483'},
+  {id:'hisuian', label:'Hisuian',  color:'#922B21'},
+  {id:'paldean', label:'Paldean',  color:'#1F6B2E'},
+  {id:'otras',   label:'Otras',    color:'#4A4A4A'},
+];
+
+const FORMS = [
+  // ── Mega ─────────────────────────────────────────────────────
+  {s:'mega',dex:3,  name:'Mega Venusaur',     api:'venusaur-mega'},
+  {s:'mega',dex:6,  name:'Mega Charizard X',  api:'charizard-mega-x'},
+  {s:'mega',dex:6,  name:'Mega Charizard Y',  api:'charizard-mega-y'},
+  {s:'mega',dex:9,  name:'Mega Blastoise',    api:'blastoise-mega'},
+  {s:'mega',dex:15, name:'Mega Beedrill',     api:'beedrill-mega'},
+  {s:'mega',dex:18, name:'Mega Pidgeot',      api:'pidgeot-mega'},
+  {s:'mega',dex:65, name:'Mega Alakazam',     api:'alakazam-mega'},
+  {s:'mega',dex:80, name:'Mega Slowbro',      api:'slowbro-mega'},
+  {s:'mega',dex:94, name:'Mega Gengar',       api:'gengar-mega'},
+  {s:'mega',dex:115,name:'Mega Kangaskhan',   api:'kangaskhan-mega'},
+  {s:'mega',dex:127,name:'Mega Pinsir',       api:'pinsir-mega'},
+  {s:'mega',dex:130,name:'Mega Gyarados',     api:'gyarados-mega'},
+  {s:'mega',dex:142,name:'Mega Aerodactyl',   api:'aerodactyl-mega'},
+  {s:'mega',dex:150,name:'Mega Mewtwo X',     api:'mewtwo-mega-x'},
+  {s:'mega',dex:150,name:'Mega Mewtwo Y',     api:'mewtwo-mega-y'},
+  {s:'mega',dex:181,name:'Mega Ampharos',     api:'ampharos-mega'},
+  {s:'mega',dex:208,name:'Mega Steelix',      api:'steelix-mega'},
+  {s:'mega',dex:212,name:'Mega Scizor',       api:'scizor-mega'},
+  {s:'mega',dex:214,name:'Mega Heracross',    api:'heracross-mega'},
+  {s:'mega',dex:229,name:'Mega Houndoom',     api:'houndoom-mega'},
+  {s:'mega',dex:248,name:'Mega Tyranitar',    api:'tyranitar-mega'},
+  {s:'mega',dex:254,name:'Mega Sceptile',     api:'sceptile-mega'},
+  {s:'mega',dex:257,name:'Mega Blaziken',     api:'blaziken-mega'},
+  {s:'mega',dex:260,name:'Mega Swampert',     api:'swampert-mega'},
+  {s:'mega',dex:282,name:'Mega Gardevoir',    api:'gardevoir-mega'},
+  {s:'mega',dex:302,name:'Mega Sableye',      api:'sableye-mega'},
+  {s:'mega',dex:303,name:'Mega Mawile',       api:'mawile-mega'},
+  {s:'mega',dex:306,name:'Mega Aggron',       api:'aggron-mega'},
+  {s:'mega',dex:308,name:'Mega Medicham',     api:'medicham-mega'},
+  {s:'mega',dex:310,name:'Mega Manectric',    api:'manectric-mega'},
+  {s:'mega',dex:319,name:'Mega Sharpedo',     api:'sharpedo-mega'},
+  {s:'mega',dex:323,name:'Mega Camerupt',     api:'camerupt-mega'},
+  {s:'mega',dex:334,name:'Mega Altaria',      api:'altaria-mega'},
+  {s:'mega',dex:354,name:'Mega Banette',      api:'banette-mega'},
+  {s:'mega',dex:359,name:'Mega Absol',        api:'absol-mega'},
+  {s:'mega',dex:362,name:'Mega Glalie',       api:'glalie-mega'},
+  {s:'mega',dex:373,name:'Mega Salamence',    api:'salamence-mega'},
+  {s:'mega',dex:376,name:'Mega Metagross',    api:'metagross-mega'},
+  {s:'mega',dex:380,name:'Mega Latias',       api:'latias-mega'},
+  {s:'mega',dex:381,name:'Mega Latios',       api:'latios-mega'},
+  {s:'mega',dex:382,name:'Kyogre Primal',     api:'kyogre-primal'},
+  {s:'mega',dex:383,name:'Groudon Primal',    api:'groudon-primal'},
+  {s:'mega',dex:384,name:'Mega Rayquaza',     api:'rayquaza-mega'},
+  {s:'mega',dex:428,name:'Mega Lopunny',      api:'lopunny-mega'},
+  {s:'mega',dex:445,name:'Mega Garchomp',     api:'garchomp-mega'},
+  {s:'mega',dex:448,name:'Mega Lucario',      api:'lucario-mega'},
+  {s:'mega',dex:460,name:'Mega Abomasnow',    api:'abomasnow-mega'},
+  {s:'mega',dex:475,name:'Mega Gallade',      api:'gallade-mega'},
+  {s:'mega',dex:531,name:'Mega Audino',       api:'audino-mega'},
+  {s:'mega',dex:681,name:'Aegislash Blade',   api:'aegislash-blade'},
+  {s:'mega',dex:719,name:'Mega Diancie',      api:'diancie-mega'},
+  {s:'mega',dex:720,name:'Hoopa Unbound',     api:'hoopa-unbound'},
+  // ── GMax ─────────────────────────────────────────────────────
+  {s:'gmax',dex:3,  name:'GMax Venusaur',        api:'venusaur-gmax'},
+  {s:'gmax',dex:6,  name:'GMax Charizard',        api:'charizard-gmax'},
+  {s:'gmax',dex:9,  name:'GMax Blastoise',        api:'blastoise-gmax'},
+  {s:'gmax',dex:12, name:'GMax Butterfree',       api:'butterfree-gmax'},
+  {s:'gmax',dex:25, name:'GMax Pikachu',          api:'pikachu-gmax'},
+  {s:'gmax',dex:52, name:'GMax Meowth',           api:'meowth-gmax'},
+  {s:'gmax',dex:68, name:'GMax Machamp',          api:'machamp-gmax'},
+  {s:'gmax',dex:94, name:'GMax Gengar',           api:'gengar-gmax'},
+  {s:'gmax',dex:99, name:'GMax Kingler',          api:'kingler-gmax'},
+  {s:'gmax',dex:131,name:'GMax Lapras',           api:'lapras-gmax'},
+  {s:'gmax',dex:133,name:'GMax Eevee',            api:'eevee-gmax'},
+  {s:'gmax',dex:143,name:'GMax Snorlax',          api:'snorlax-gmax'},
+  {s:'gmax',dex:569,name:'GMax Garbodor',         api:'garbodor-gmax'},
+  {s:'gmax',dex:809,name:'GMax Melmetal',         api:'melmetal-gmax'},
+  {s:'gmax',dex:812,name:'GMax Rillaboom',        api:'rillaboom-gmax'},
+  {s:'gmax',dex:815,name:'GMax Cinderace',        api:'cinderace-gmax'},
+  {s:'gmax',dex:818,name:'GMax Inteleon',         api:'inteleon-gmax'},
+  {s:'gmax',dex:823,name:'GMax Corviknight',      api:'corviknight-gmax'},
+  {s:'gmax',dex:826,name:'GMax Orbeetle',         api:'orbeetle-gmax'},
+  {s:'gmax',dex:834,name:'GMax Drednaw',          api:'drednaw-gmax'},
+  {s:'gmax',dex:839,name:'GMax Coalossal',        api:'coalossal-gmax'},
+  {s:'gmax',dex:841,name:'GMax Flapple',          api:'flapple-gmax'},
+  {s:'gmax',dex:842,name:'GMax Appletun',         api:'appletun-gmax'},
+  {s:'gmax',dex:844,name:'GMax Sandaconda',       api:'sandaconda-gmax'},
+  {s:'gmax',dex:849,name:'GMax Toxtricity',       api:'toxtricity-amped-gmax'},
+  {s:'gmax',dex:851,name:'GMax Centiskorch',      api:'centiskorch-gmax'},
+  {s:'gmax',dex:858,name:'GMax Hatterene',        api:'hatterene-gmax'},
+  {s:'gmax',dex:861,name:'GMax Grimmsnarl',       api:'grimmsnarl-gmax'},
+  {s:'gmax',dex:869,name:'GMax Alcremie',         api:'alcremie-gmax'},
+  {s:'gmax',dex:879,name:'GMax Copperajah',       api:'copperajah-gmax'},
+  {s:'gmax',dex:884,name:'GMax Duraludon',        api:'duraludon-gmax'},
+  {s:'gmax',dex:892,name:'GMax Urshifu Single',   api:'urshifu-single-strike-gmax'},
+  {s:'gmax',dex:892,name:'GMax Urshifu Rapid',    api:'urshifu-rapid-strike-gmax'},
+  // ── Alolan ───────────────────────────────────────────────────
+  {s:'alolan',dex:19, name:'Rattata Alolan',      api:'rattata-alola'},
+  {s:'alolan',dex:20, name:'Raticate Alolan',     api:'raticate-alola'},
+  {s:'alolan',dex:26, name:'Raichu Alolan',       api:'raichu-alola'},
+  {s:'alolan',dex:27, name:'Sandshrew Alolan',    api:'sandshrew-alola'},
+  {s:'alolan',dex:28, name:'Sandslash Alolan',    api:'sandslash-alola'},
+  {s:'alolan',dex:37, name:'Vulpix Alolan',       api:'vulpix-alola'},
+  {s:'alolan',dex:38, name:'Ninetales Alolan',    api:'ninetales-alola'},
+  {s:'alolan',dex:50, name:'Diglett Alolan',      api:'diglett-alola'},
+  {s:'alolan',dex:51, name:'Dugtrio Alolan',      api:'dugtrio-alola'},
+  {s:'alolan',dex:52, name:'Meowth Alolan',       api:'meowth-alola'},
+  {s:'alolan',dex:53, name:'Persian Alolan',      api:'persian-alola'},
+  {s:'alolan',dex:74, name:'Geodude Alolan',      api:'geodude-alola'},
+  {s:'alolan',dex:75, name:'Graveler Alolan',     api:'graveler-alola'},
+  {s:'alolan',dex:76, name:'Golem Alolan',        api:'golem-alola'},
+  {s:'alolan',dex:88, name:'Grimer Alolan',       api:'grimer-alola'},
+  {s:'alolan',dex:89, name:'Muk Alolan',          api:'muk-alola'},
+  {s:'alolan',dex:103,name:'Exeggutor Alolan',    api:'exeggutor-alola'},
+  {s:'alolan',dex:105,name:'Marowak Alolan',      api:'marowak-alola'},
+  {s:'alolan',dex:745,name:'Lycanroc Midnight',   api:'lycanroc-midnight'},
+  {s:'alolan',dex:745,name:'Lycanroc Dusk',       api:'lycanroc-dusk'},
+  {s:'alolan',dex:800,name:'Necrozma Dusk Mane',  api:'necrozma-dusk'},
+  {s:'alolan',dex:800,name:'Necrozma Dawn Wings', api:'necrozma-dawn'},
+  {s:'alolan',dex:800,name:'Necrozma Ultra',      api:'necrozma-ultra'},
+  // ── Galarian ─────────────────────────────────────────────────
+  {s:'galarian',dex:52, name:'Meowth Galarian',     api:'meowth-galar'},
+  {s:'galarian',dex:77, name:'Ponyta Galarian',      api:'ponyta-galar'},
+  {s:'galarian',dex:78, name:'Rapidash Galarian',    api:'rapidash-galar'},
+  {s:'galarian',dex:79, name:'Slowpoke Galarian',    api:'slowpoke-galar'},
+  {s:'galarian',dex:80, name:'Slowbro Galarian',     api:'slowbro-galar'},
+  {s:'galarian',dex:83, name:'Farfetchd Galarian',   api:'farfetchd-galar'},
+  {s:'galarian',dex:110,name:'Weezing Galarian',     api:'weezing-galar'},
+  {s:'galarian',dex:122,name:'Mr. Mime Galarian',    api:'mr-mime-galar'},
+  {s:'galarian',dex:144,name:'Articuno Galarian',    api:'articuno-galar'},
+  {s:'galarian',dex:145,name:'Zapdos Galarian',      api:'zapdos-galar'},
+  {s:'galarian',dex:146,name:'Moltres Galarian',     api:'moltres-galar'},
+  {s:'galarian',dex:199,name:'Slowking Galarian',    api:'slowking-galar'},
+  {s:'galarian',dex:222,name:'Corsola Galarian',     api:'corsola-galar'},
+  {s:'galarian',dex:263,name:'Zigzagoon Galarian',   api:'zigzagoon-galar'},
+  {s:'galarian',dex:264,name:'Linoone Galarian',     api:'linoone-galar'},
+  {s:'galarian',dex:554,name:'Darumaka Galarian',    api:'darumaka-galar'},
+  {s:'galarian',dex:555,name:'Darmanitan Galarian',  api:'darmanitan-galar-standard'},
+  {s:'galarian',dex:562,name:'Yamask Galarian',      api:'yamask-galar'},
+  {s:'galarian',dex:618,name:'Stunfisk Galarian',    api:'stunfisk-galar'},
+  {s:'galarian',dex:888,name:'Zacian Crowned',       api:'zacian-crowned'},
+  {s:'galarian',dex:889,name:'Zamazenta Crowned',    api:'zamazenta-crowned'},
+  // ── Hisuian ──────────────────────────────────────────────────
+  {s:'hisuian',dex:58, name:'Growlithe Hisuian',  api:'growlithe-hisui'},
+  {s:'hisuian',dex:59, name:'Arcanine Hisuian',   api:'arcanine-hisui'},
+  {s:'hisuian',dex:100,name:'Voltorb Hisuian',    api:'voltorb-hisui'},
+  {s:'hisuian',dex:101,name:'Electrode Hisuian',  api:'electrode-hisui'},
+  {s:'hisuian',dex:157,name:'Typhlosion Hisuian', api:'typhlosion-hisui'},
+  {s:'hisuian',dex:211,name:'Qwilfish Hisuian',   api:'qwilfish-hisui'},
+  {s:'hisuian',dex:215,name:'Sneasel Hisuian',    api:'sneasel-hisui'},
+  {s:'hisuian',dex:503,name:'Samurott Hisuian',   api:'samurott-hisui'},
+  {s:'hisuian',dex:549,name:'Lilligant Hisuian',  api:'lilligant-hisui'},
+  {s:'hisuian',dex:570,name:'Zorua Hisuian',      api:'zorua-hisui'},
+  {s:'hisuian',dex:571,name:'Zoroark Hisuian',    api:'zoroark-hisui'},
+  {s:'hisuian',dex:628,name:'Braviary Hisuian',   api:'braviary-hisui'},
+  {s:'hisuian',dex:705,name:'Sliggoo Hisuian',    api:'sliggoo-hisui'},
+  {s:'hisuian',dex:706,name:'Goodra Hisuian',     api:'goodra-hisui'},
+  {s:'hisuian',dex:713,name:'Avalugg Hisuian',    api:'avalugg-hisui'},
+  {s:'hisuian',dex:724,name:'Decidueye Hisuian',  api:'decidueye-hisui'},
+  // ── Paldean ──────────────────────────────────────────────────
+  {s:'paldean',dex:128, name:'Tauros Combat',        api:'tauros-paldea-combat-breed'},
+  {s:'paldean',dex:128, name:'Tauros Blaze',         api:'tauros-paldea-blaze-breed'},
+  {s:'paldean',dex:128, name:'Tauros Aqua',          api:'tauros-paldea-aqua-breed'},
+  {s:'paldean',dex:194, name:'Wooper Paldean',       api:'wooper-paldea'},
+  {s:'paldean',dex:1017,name:'Ogerpon Wellspring',   api:'ogerpon-wellspring-mask'},
+  {s:'paldean',dex:1017,name:'Ogerpon Hearthflame',  api:'ogerpon-hearthflame-mask'},
+  {s:'paldean',dex:1017,name:'Ogerpon Cornerstone',  api:'ogerpon-cornerstone-mask'},
+  // ── Otras formas ─────────────────────────────────────────────
+  {s:'otras',dex:386,name:'Deoxys Attack',        api:'deoxys-attack'},
+  {s:'otras',dex:386,name:'Deoxys Defense',       api:'deoxys-defense'},
+  {s:'otras',dex:386,name:'Deoxys Speed',         api:'deoxys-speed'},
+  {s:'otras',dex:479,name:'Rotom Heat',           api:'rotom-heat'},
+  {s:'otras',dex:479,name:'Rotom Wash',           api:'rotom-wash'},
+  {s:'otras',dex:479,name:'Rotom Frost',          api:'rotom-frost'},
+  {s:'otras',dex:479,name:'Rotom Fan',            api:'rotom-fan'},
+  {s:'otras',dex:479,name:'Rotom Mow',            api:'rotom-mow'},
+  {s:'otras',dex:487,name:'Giratina Origin',      api:'giratina-origin'},
+  {s:'otras',dex:492,name:'Shaymin Sky',          api:'shaymin-sky'},
+  {s:'otras',dex:555,name:'Darmanitan Zen',       api:'darmanitan-zen'},
+  {s:'otras',dex:555,name:'Darmanitan Galar Zen', api:'darmanitan-galar-zen'},
+  {s:'otras',dex:641,name:'Tornadus Therian',     api:'tornadus-therian'},
+  {s:'otras',dex:642,name:'Thundurus Therian',    api:'thundurus-therian'},
+  {s:'otras',dex:645,name:'Landorus Therian',     api:'landorus-therian'},
+  {s:'otras',dex:646,name:'Kyurem Black',         api:'kyurem-black'},
+  {s:'otras',dex:646,name:'Kyurem White',         api:'kyurem-white'},
+  {s:'otras',dex:648,name:'Meloetta Pirouette',   api:'meloetta-pirouette'},
+  {s:'otras',dex:718,name:'Zygarde 10%',          api:'zygarde-10'},
+  {s:'otras',dex:718,name:'Zygarde Complete',     api:'zygarde-complete'},
+  {s:'otras',dex:746,name:'Wishiwashi School',    api:'wishiwashi-school'},
+  {s:'otras',dex:892,name:'Urshifu Rapid Strike', api:'urshifu-rapid-strike'},
+  {s:'otras',dex:898,name:'Calyrex Ice Rider',    api:'calyrex-ice'},
+  {s:'otras',dex:898,name:'Calyrex Shadow Rider', api:'calyrex-shadow'},
+  {s:'otras',dex:905,name:'Enamorus Therian',     api:'enamorus-therian'},
+  {s:'otras',dex:980,name:'Palafin Hero',         api:'palafin-hero'},
+];
+
+// ── Estado ────────────────────────────────────────────────────────
+let baseMons    = [];
+let formSprites = {};
+let checked     = {};
+let activeSection = 'base';
+let activeGen   = 0;
+let query       = '';
+let filterPending = false;
+let locked      = false;
+
+// Helpers
+const secOf   = id  => SECTIONS.find(s => s.id === id);
+const genOf   = n   => GENS.find(g => n >= g.s && n <= g.e) || GENS[0];
+const formKey = f   => `${f.s}:${f.api}`;
+const secForms = id => FORMS.filter(f => f.s === id);
+
+// ── Persistencia ──────────────────────────────────────────────────
+function loadChecked() {
+  try {
+    // Migrar datos del formato anterior (v1 usaba número como clave)
+    const old = localStorage.getItem('pokedex-checked-v1');
+    const cur = localStorage.getItem(STORAGE_KEY);
+    if (!cur && old) {
+      checked = JSON.parse(old);
+      saveChecked();
+    } else if (cur) {
+      checked = JSON.parse(cur);
+    }
+  } catch { checked = {}; }
+}
+function saveChecked() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {}
+  jbSave(checked);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────
+function calcStats() {
+  const grandTotal = 1025 + FORMS.length;
+  const total = Object.values(checked).filter(Boolean).length;
+  let secDone, secTotal;
+  if (activeSection === 'base') {
+    secDone  = baseMons.filter(m => checked[String(m.num)]).length;
+    secTotal = 1025;
+  } else {
+    const fs = secForms(activeSection);
+    secDone  = fs.filter(f => checked[formKey(f)]).length;
+    secTotal = fs.length;
+  }
+  return { total, grandTotal, secDone, secTotal };
+}
+function updateStats() {
+  const { total, grandTotal, secDone, secTotal } = calcStats();
+  const sec = secOf(activeSection);
+  document.getElementById('pill-sec').innerHTML   = `<b>${secDone}</b> / ${secTotal} ${sec.label}`;
+  document.getElementById('pill-total').innerHTML = `Total <b>${total}</b> / ${grandTotal}`;
+  document.getElementById('pill-pct').innerHTML   = `<b>${Math.round(total / grandTotal * 100)}%</b>`;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg, ms = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.opacity = '1', 10);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 200); }, ms);
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function isVisible(mon) {
+  if (filterPending && checked[mon._id]) return false;
+  if (query) {
+    const q = query.toLowerCase();
+    if (!mon.name.toLowerCase().includes(q) && !String(mon.dex ?? mon.num).includes(q)) return false;
+  }
+  if (activeSection === 'base' && activeGen !== 0) {
+    const g = GENS[activeGen - 1];
+    if (mon.num < g.s || mon.num > g.e) return false;
+  }
+  return true;
+}
+
+function renderGrid() {
+  const grid  = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+
+  let mons;
+  if (activeSection === 'base') {
+    mons = baseMons.map(m => ({
+      ...m, _id: String(m.num), _color: genOf(m.num).c,
+      _label: `#${String(m.num).padStart(4,'0')}`,
+      _sprite: `${SPRITE}${m.num}.png`,
+    }));
+  } else {
+    mons = secForms(activeSection).map(f => ({
+      ...f, num: f.dex, _id: formKey(f), _color: secOf(f.s).color,
+      _label: `#${String(f.dex).padStart(4,'0')}`,
+      _sprite: formSprites[f.api] || '',
+    }));
+  }
+
+  const vis = mons.filter(isVisible);
+  grid.innerHTML = '';
+  if (!vis.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const frag = document.createDocumentFragment();
+  vis.forEach(mon => {
+    const isChecked = !!checked[mon._id];
+    const div = document.createElement('div');
+    div.className = 'pcard' + (isChecked ? ' checked' : '');
+    div.dataset.id = mon._id;
+
+    const imgEl = mon._sprite
+      ? `<img class="pimg" src="${mon._sprite}" alt="${mon.name}" loading="lazy" onerror="this.style.opacity='.2'">`
+      : `<div class="pimg-ph">⏳</div>`;
+
+    const short = mon.name.length > 16 ? mon.name.slice(0, 15) + '…' : mon.name;
+    div.innerHTML = `
+      <div class="gen-bar" style="background:${mon._color}"></div>
+      <div class="checkmark">✓</div>
+      ${imgEl}
+      <span class="pnum">${mon._label}</span>
+      <span class="pname" title="${mon.name}">${short}</span>`;
+
+    div.addEventListener('click', () => {
+      if (locked) { showToast('Pantalla bloqueada'); return; }
+      checked[mon._id] = !checked[mon._id];
+      div.classList.toggle('checked', checked[mon._id]);
+      updateStats();
+      saveChecked();
+      if (filterPending && checked[mon._id]) {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 200);
+      }
+    });
+    frag.appendChild(div);
+  });
+  grid.appendChild(frag);
+}
+
+// ── Form sprites (background fetch + cache) ───────────────────────
+async function loadFormSprites() {
+  try { formSprites = JSON.parse(localStorage.getItem(SPRITES_KEY) || '{}'); } catch {}
+
+  const needed = FORMS.filter(f => !formSprites[f.api]);
+  if (!needed.length) return;
+
+  const POOL = 8;
+  for (let i = 0; i < needed.length; i += POOL) {
+    await Promise.all(needed.slice(i, i + POOL).map(async f => {
+      try {
+        const r = await fetch(`https://pokeapi.co/api/v2/pokemon/${f.api}`,
+          { signal: AbortSignal.timeout(10000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const url = d.sprites?.other?.['official-artwork']?.front_default
+                 || d.sprites?.other?.home?.front_default
+                 || d.sprites?.front_default || '';
+        if (url) formSprites[f.api] = url;
+      } catch {}
+    }));
+    try { localStorage.setItem(SPRITES_KEY, JSON.stringify(formSprites)); } catch {}
+    if (activeSection !== 'base') renderGrid();
+  }
+  if (activeSection !== 'base') renderGrid();
+}
+
+// ── Section tabs ──────────────────────────────────────────────────
+function buildSectionTabs() {
+  const scroll = document.getElementById('section-scroll');
+  SECTIONS.forEach(sec => {
+    const total = sec.id === 'base' ? 1025 : secForms(sec.id).length;
+    const chip  = document.createElement('span');
+    chip.className   = 'sec-chip' + (sec.id === 'base' ? ' active' : '');
+    chip.dataset.sec = sec.id;
+    chip.style.background = sec.id === 'base' ? sec.color : '';
+    chip.innerHTML = `${sec.label}<span class="sec-badge">${total}</span>`;
+    chip.addEventListener('click', () => {
+      activeSection = sec.id;
+      activeGen = 0; query = '';
+      document.getElementById('search').value = '';
+      document.querySelectorAll('.sec-chip').forEach(c => {
+        const on = c.dataset.sec === sec.id;
+        c.classList.toggle('active', on);
+        c.style.background = on ? secOf(c.dataset.sec).color : '';
+      });
+      document.getElementById('gen-scroll').classList.toggle('hidden', sec.id !== 'base');
+      if (sec.id === 'base') resetGenChips();
+      updateStats();
+      renderGrid();
+    });
+    scroll.appendChild(chip);
+  });
+}
+
+// ── Gen chips ─────────────────────────────────────────────────────
+function resetGenChips() {
+  document.querySelectorAll('.chip').forEach(c => {
+    const on = c.dataset.gen === '0';
+    c.classList.toggle('active', on);
+    c.style.background = ''; c.style.borderColor = ''; c.style.color = '';
+  });
+}
+function buildGenChips() {
+  const scroll = document.getElementById('gen-scroll');
+  GENS.forEach((g, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip'; chip.dataset.gen = i + 1; chip.textContent = g.n;
+    chip.addEventListener('click', () => {
+      activeGen = i + 1;
+      document.querySelectorAll('.chip').forEach(c => {
+        const on = +c.dataset.gen === activeGen;
+        c.classList.toggle('active', on);
+        c.style.background   = on ? g.c : '';
+        c.style.borderColor  = on ? g.c : '';
+        c.style.color        = on ? '#fff' : '';
+      });
+      renderGrid();
+    });
+    scroll.appendChild(chip);
+  });
+  document.querySelector('.chip[data-gen="0"]').addEventListener('click', () => {
+    activeGen = 0; resetGenChips(); renderGrid();
+  });
+}
+
+// ── Lock ──────────────────────────────────────────────────────────
+document.getElementById('lock-btn').addEventListener('click', () => {
+  locked = !locked;
+  document.getElementById('lock-btn').classList.toggle('locked', locked);
+  document.getElementById('lock-icon').innerHTML = locked
+    ? `<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>`
+    : `<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`;
+  showToast(locked ? 'Pantalla bloqueada' : 'Pantalla desbloqueada');
+});
+
+// ── Backup ────────────────────────────────────────────────────────
+function doExport() {
+  const n = Object.values(checked).filter(Boolean).length;
+  const blob = new Blob([JSON.stringify({ version:2, date:new Date().toISOString(), captured:n, checked }, null, 2)],
+    { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pokedex-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast(`Guardado: ${n} capturados`, 2200);
+}
+function doImport(file) {
+  new FileReader().onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.checked) throw 0;
+      checked = d.checked;
+      saveChecked(); updateStats(); renderGrid();
+      showToast(`Restaurado: ${Object.values(checked).filter(Boolean).length} capturados`, 2500);
+    } catch { showToast('Archivo inválido', 2000); }
+  };
+  new FileReader().readAsText(file);  // fix below
+}
+// Corrección: usar una sola instancia
+document.getElementById('opt-import').addEventListener('click', () => {
+  document.getElementById('backup-modal').classList.remove('open');
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change', e => {
+  if (!e.target.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (!d.checked) throw 0;
+      checked = d.checked;
+      saveChecked(); updateStats(); renderGrid();
+      showToast(`Restaurado: ${Object.values(checked).filter(Boolean).length} capturados`, 2500);
+    } catch { showToast('Archivo inválido', 2000); }
+  };
+  reader.readAsText(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('backup-btn').addEventListener('click', () => document.getElementById('backup-modal').classList.add('open'));
+document.getElementById('cancel-backup').addEventListener('click', () => document.getElementById('backup-modal').classList.remove('open'));
+document.getElementById('backup-modal').addEventListener('click', e => { if (e.target.id === 'backup-modal') document.getElementById('backup-modal').classList.remove('open'); });
+document.getElementById('opt-export').addEventListener('click', () => { document.getElementById('backup-modal').classList.remove('open'); doExport(); });
+
+// ── Share / Print ─────────────────────────────────────────────────
+document.getElementById('share-btn').addEventListener('click', () => {
+  const { total, grandTotal } = calcStats();
+  document.getElementById('share-subtitle').textContent = `${total}/${grandTotal} · ${Math.round(total/grandTotal*100)}%`;
+  document.getElementById('share-modal').classList.add('open');
+});
+document.getElementById('cancel-share').addEventListener('click', () => document.getElementById('share-modal').classList.remove('open'));
+document.getElementById('share-modal').addEventListener('click', e => { if (e.target.id === 'share-modal') document.getElementById('share-modal').classList.remove('open'); });
+
+document.getElementById('opt-share').addEventListener('click', () => {
+  document.getElementById('share-modal').classList.remove('open');
+  const { total, grandTotal } = calcStats();
+  let txt = `Pokédex Checklist — ${total}/${grandTotal} (${Math.round(total/grandTotal*100)}%)\n\nBASE:\n`;
+  GENS.forEach(g => {
+    const done = baseMons.filter(m => m.num >= g.s && m.num <= g.e && checked[String(m.num)]).length;
+    txt += `  ${g.n}: ${done}/${g.e - g.s + 1}\n`;
+  });
+  txt += '\nFORMAS:\n';
+  SECTIONS.filter(s => s.id !== 'base').forEach(s => {
+    const fs = secForms(s.id);
+    txt += `  ${s.label}: ${fs.filter(f => checked[formKey(f)]).length}/${fs.length}\n`;
+  });
+  if (navigator.share) navigator.share({ title:'Pokédex Checklist', text:txt }).catch(()=>{});
+  else navigator.clipboard.writeText(txt).then(() => showToast('Copiado')).catch(() => prompt('', txt));
+});
+
+document.getElementById('opt-print').addEventListener('click', () => {
+  document.getElementById('share-modal').classList.remove('open');
+  const { total, grandTotal } = calcStats();
+  const wrap = document.getElementById('print-wrap');
+  wrap.innerHTML = '';
+
+  let mons;
+  if (activeSection === 'base') {
+    mons = baseMons.map(m => ({
+      id: String(m.num), name: m.name,
+      sprite: `${SPRITE}${m.num}.png`,
+      color: genOf(m.num).c,
+      label: `#${String(m.num).padStart(4,'0')}`,
+    }));
+  } else {
+    mons = secForms(activeSection).map(f => ({
+      id: formKey(f), name: f.name,
+      sprite: formSprites[f.api] || '',
+      color: secOf(f.s).color,
+      label: `#${String(f.dex).padStart(4,'0')}`,
+    }));
+  }
+
+  const pages = Math.ceil(mons.length / PER_PAGE);
+  const sec   = secOf(activeSection);
+  for (let p = 0; p < pages; p++) {
+    const slice  = mons.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
+    const blanks = PER_PAGE - slice.length;
+    const cells  = slice.map(m => {
+      const done  = !!checked[m.id];
+      const short = m.name.length > 13 ? m.name.slice(0,12) + '…' : m.name;
+      return `<div class="pcell${done?' done':''}" style="border-left-color:${m.color}">
+        <span class="pcell-check">✓</span>
+        <div class="pcell-circle"></div>
+        ${m.sprite ? `<img class="pcell-img" src="${m.sprite}" loading="lazy" onerror="this.style.opacity='.1'">` : '<div class="pcell-img"></div>'}
+        <span class="pcell-num" style="color:${m.color}">${m.label}</span>
+        <span class="pcell-name">${short}</span>
+      </div>`;
+    }).join('') + Array(blanks).fill('<div class="pcell pcell-blank"></div>').join('');
+    const page = document.createElement('div');
+    page.className = 'print-page';
+    page.innerHTML = `
+      <div class="print-header">
+        <span class="print-title">POKÉDEX — ${sec.label.toUpperCase()}</span>
+        <span class="print-sub">${total}/${grandTotal} total · Pág ${p+1}/${pages}</span>
+      </div>
+      <div class="print-grid">${cells}</div>`;
+    wrap.appendChild(page);
+  }
+  setTimeout(() => window.print(), 250);
+});
+
+// ── Search / Filter ───────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', e => { query = e.target.value; renderGrid(); });
+document.getElementById('filter-btn').addEventListener('click', () => {
+  filterPending = !filterPending;
+  document.getElementById('filter-btn').classList.toggle('active', filterPending);
+  renderGrid();
+});
+
+// ── Sync modal ────────────────────────────────────────────────────
+function updateSyncBtn() {
+  document.getElementById('sync-btn').classList.toggle('synced', !!binId);
+}
+
+function renderSyncBody() {
+  const body = document.getElementById('sync-body');
+  if (binId) {
+    body.innerHTML = `
+      <div style="background:#f0faf4;border:1px solid #b2dfcb;border-radius:10px;padding:12px 14px;margin-bottom:4px">
+        <div style="font-size:10px;color:#888;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Sala activa</div>
+        <div style="font-family:monospace;font-size:11px;font-weight:700;word-break:break-all;color:#1c1c1e">${binId}</div>
+      </div>
+      <div class="sheet-option" id="opt-copy-code">
+        <div class="s-icon" style="background:#fff3e0">📋</div>
+        <div><b>Copiar código</b><span>Comparte con tu esposa por WhatsApp</span></div>
+      </div>
+      <div class="sheet-option" id="opt-sync-now">
+        <div class="s-icon" style="background:#e3f2fd">🔄</div>
+        <div><b>Sincronizar ahora</b><span>Traer cambios desde la sala</span></div>
+      </div>
+      <div class="sheet-option" id="opt-disconnect">
+        <div class="s-icon" style="background:#fce4ec">🔌</div>
+        <div><b>Desconectar</b><span>Solo afecta este dispositivo</span></div>
+      </div>`;
+    document.getElementById('opt-copy-code').addEventListener('click', () => {
+      navigator.clipboard.writeText(binId).then(() => showToast('Código copiado')).catch(() => prompt('Código de sala:', binId));
+    });
+    document.getElementById('opt-sync-now').addEventListener('click', async () => {
+      document.getElementById('sync-modal').classList.remove('open');
+      showToast('Sincronizando...', 1500);
+      const remote = await jbLoad();
+      if (remote) {
+        Object.keys(remote).forEach(k => { if (remote[k]) checked[k] = true; });
+        saveChecked(); updateStats(); renderGrid();
+        showToast('Sincronizado ✓');
+      } else { showToast('Error al sincronizar', 2000); }
+    });
+    document.getElementById('opt-disconnect').addEventListener('click', () => {
+      binId = ''; localStorage.removeItem(BIN_ID_KEY);
+      updateSyncBtn(); renderSyncBody();
+      showToast('Sala desconectada');
+    });
+  } else {
+    body.innerHTML = `
+      <div class="sheet-option" id="opt-crear">
+        <div class="s-icon" style="background:#e8f5e9">☁️</div>
+        <div><b>Crear sala nueva</b><span>Sube tu progreso actual y obtén un código</span></div>
+      </div>
+      <div class="sheet-option" id="opt-unirse">
+        <div class="s-icon" style="background:#e3f2fd">🔗</div>
+        <div><b>Unirse a sala</b><span>Ingresa el código que te compartieron</span></div>
+      </div>`;
+    document.getElementById('opt-crear').addEventListener('click', async () => {
+      showToast('Creando sala...', 2500);
+      const id = await jbCreate();
+      if (id) {
+        binId = id; localStorage.setItem(BIN_ID_KEY, id);
+        updateSyncBtn(); renderSyncBody();
+        showToast('Sala creada ✓');
+      } else { showToast('Error al crear sala', 2000); }
+    });
+    document.getElementById('opt-unirse').addEventListener('click', () => {
+      body.innerHTML = `
+        <div style="padding:8px 0 12px">
+          <div style="font-size:12px;color:#888;margin-bottom:8px">Pega el código que te compartieron:</div>
+          <input id="bin-input" type="text" placeholder="Código de sala..."
+            style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;outline:none;font-family:monospace;background:#f9f9f9">
+        </div>
+        <div class="sheet-option" id="opt-conectar">
+          <div class="s-icon" style="background:#e8f5e9">✅</div>
+          <div><b>Conectar y sincronizar</b><span>Combina tu progreso con el de la sala</span></div>
+        </div>`;
+      document.getElementById('bin-input').focus();
+      document.getElementById('opt-conectar').addEventListener('click', async () => {
+        const input = document.getElementById('bin-input').value.trim();
+        if (!input) { showToast('Ingresa un código'); return; }
+        const prev = binId; binId = input;
+        showToast('Conectando...', 1500);
+        const remote = await jbLoad();
+        if (remote) {
+          localStorage.setItem(BIN_ID_KEY, input);
+          Object.keys(remote).forEach(k => { if (remote[k]) checked[k] = true; });
+          saveChecked(); updateStats(); renderGrid();
+          updateSyncBtn(); renderSyncBody();
+          showToast('Sala conectada ✓');
+        } else { binId = prev; showToast('Código inválido', 2000); }
+      });
+    });
+  }
+}
+
+document.getElementById('sync-btn').addEventListener('click', () => {
+  renderSyncBody();
+  document.getElementById('sync-modal').classList.add('open');
+});
+document.getElementById('cancel-sync').addEventListener('click', () => document.getElementById('sync-modal').classList.remove('open'));
+document.getElementById('sync-modal').addEventListener('click', e => {
+  if (e.target.id === 'sync-modal') document.getElementById('sync-modal').classList.remove('open');
+});
+updateSyncBtn();
+
+// ── Init ──────────────────────────────────────────────────────────
+async function init() {
+  loadChecked();
+  const pbar  = document.getElementById('pbar');
+  const lmsg  = document.getElementById('lmsg');
+  pbar.style.width = '10%';
+
+  try {
+    const r = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025&offset=0');
+    const d = await r.json();
+    baseMons = d.results.map((p, i) => ({
+      num: i + 1,
+      name: p.name.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-'),
+    }));
+    pbar.style.width = '90%';
+  } catch {
+    lmsg.textContent = 'Error de conexión. Revisa tu internet.';
+    return;
+  }
+
+  // Cargar desde sala sync si está conectado (merge: unión de ambos)
+  const remote = await jbLoad();
+  if (remote) {
+    Object.keys(remote).forEach(k => { if (remote[k]) checked[k] = true; });
+    saveChecked();
+  }
+
+  pbar.style.width = '100%';
+  await new Promise(r => setTimeout(r, 150));
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  buildSectionTabs();
+  buildGenChips();
+  updateStats();
+  renderGrid();
+
+  // Sprites de formas en background (no bloquea la UI)
+  loadFormSprites();
+}
+
+init();
+</script>
+</body>
+</html>

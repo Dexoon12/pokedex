@@ -1,0 +1,7 @@
+*.py
+*.pdf
+*.pyc
+__pycache__/
+pokemon_sprites/
+*.json
+!package.json
