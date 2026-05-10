@@ -248,9 +248,7 @@ const FORMS=[
   {s:'mega',dex:460,name:'Mega Abomasnow',    api:'abomasnow-mega'},
   {s:'mega',dex:475,name:'Mega Gallade',      api:'gallade-mega'},
   {s:'mega',dex:531,name:'Mega Audino',       api:'audino-mega'},
-  {s:'mega',dex:681,name:'Aegislash Blade',   api:'aegislash-blade'},
   {s:'mega',dex:719,name:'Mega Diancie',      api:'diancie-mega'},
-  {s:'mega',dex:720,name:'Hoopa Unbound',     api:'hoopa-unbound'},
   {s:'gmax',dex:3,  name:'GMax Venusaur',     api:'venusaur-gmax'},
   {s:'gmax',dex:6,  name:'GMax Charizard',    api:'charizard-gmax'},
   {s:'gmax',dex:9,  name:'GMax Blastoise',    api:'blastoise-gmax'},
@@ -304,8 +302,8 @@ const FORMS=[
   {s:'alolan',dex:105,name:'Marowak Alolan',  api:'marowak-alola'},
   {s:'alolan',dex:745,name:'Lycanroc Midnight',api:'lycanroc-midnight'},
   {s:'alolan',dex:745,name:'Lycanroc Dusk',   api:'lycanroc-dusk'},
-  {s:'alolan',dex:800,name:'Necrozma Dusk',   api:'necrozma-dusk'},
-  {s:'alolan',dex:800,name:'Necrozma Dawn',   api:'necrozma-dawn'},
+  {s:'alolan',dex:800,name:'Necrozma Dusk',   api:'necrozma-duskmane'},
+  {s:'alolan',dex:800,name:'Necrozma Dawn',   api:'necrozma-dawnwings'},
   {s:'alolan',dex:800,name:'Necrozma Ultra',  api:'necrozma-ultra'},
   {s:'galarian',dex:52, name:'Meowth Galar',  api:'meowth-galar'},
   {s:'galarian',dex:77, name:'Ponyta Galar',  api:'ponyta-galar'},
@@ -323,7 +321,7 @@ const FORMS=[
   {s:'galarian',dex:263,name:'Zigzagoon Galar',api:'zigzagoon-galar'},
   {s:'galarian',dex:264,name:'Linoone Galar', api:'linoone-galar'},
   {s:'galarian',dex:554,name:'Darumaka Galar',api:'darumaka-galar'},
-  {s:'galarian',dex:555,name:'Darmanitan Galar',api:'darmanitan-galar-standard'},
+  {s:'galarian',dex:555,name:'Darmanitan Galar',api:'darmanitan-galar'},
   {s:'galarian',dex:562,name:'Yamask Galar',  api:'yamask-galar'},
   {s:'galarian',dex:618,name:'Stunfisk Galar',api:'stunfisk-galar'},
   {s:'galarian',dex:888,name:'Zacian Crowned',api:'zacian-crowned'},
@@ -344,13 +342,13 @@ const FORMS=[
   {s:'hisuian',dex:706,name:'Goodra Hisui',   api:'goodra-hisui'},
   {s:'hisuian',dex:713,name:'Avalugg Hisui',  api:'avalugg-hisui'},
   {s:'hisuian',dex:724,name:'Decidueye Hisui',api:'decidueye-hisui'},
-  {s:'paldean',dex:128, name:'Tauros Combat', api:'tauros-paldea-combat-breed'},
-  {s:'paldean',dex:128, name:'Tauros Blaze',  api:'tauros-paldea-blaze-breed'},
-  {s:'paldean',dex:128, name:'Tauros Aqua',   api:'tauros-paldea-aqua-breed'},
+  {s:'paldean',dex:128, name:'Tauros Combat', api:'tauros-paldea-combat'},
+  {s:'paldean',dex:128, name:'Tauros Blaze',  api:'tauros-paldea-blaze'},
+  {s:'paldean',dex:128, name:'Tauros Aqua',   api:'tauros-paldea-aqua'},
   {s:'paldean',dex:194, name:'Wooper Paldean',api:'wooper-paldea'},
-  {s:'paldean',dex:1017,name:'Ogerpon Wellspring',api:'ogerpon-wellspring-mask'},
-  {s:'paldean',dex:1017,name:'Ogerpon Hearthflame',api:'ogerpon-hearthflame-mask'},
-  {s:'paldean',dex:1017,name:'Ogerpon Cornerstone',api:'ogerpon-cornerstone-mask'},
+  {s:'paldean',dex:1017,name:'Ogerpon Wellspring',  api:'ogerpon-wellspring'},
+  {s:'paldean',dex:1017,name:'Ogerpon Hearthflame', api:'ogerpon-hearthflame'},
+  {s:'paldean',dex:1017,name:'Ogerpon Cornerstone', api:'ogerpon-cornerstone'},
   {s:'otras',dex:386,name:'Deoxys Attack',    api:'deoxys-attack'},
   {s:'otras',dex:386,name:'Deoxys Defense',   api:'deoxys-defense'},
   {s:'otras',dex:386,name:'Deoxys Speed',     api:'deoxys-speed'},
@@ -377,10 +375,12 @@ const FORMS=[
   {s:'otras',dex:898,name:'Calyrex Shadow',   api:'calyrex-shadow'},
   {s:'otras',dex:905,name:'Enamorus Therian', api:'enamorus-therian'},
   {s:'otras',dex:980,name:'Palafin Hero',     api:'palafin-hero'},
+  {s:'otras',dex:681,name:'Aegislash Blade',  api:'aegislash-blade'},
+  {s:'otras',dex:720,name:'Hoopa Unbound',    api:'hoopa-unbound'},
 ];
 
 const SB = n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
-const SF = a=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${a}.png`;
+const SF = a=>`https://play.pokemonshowdown.com/sprites/gen5/${a}.png`;
 
 // ── State ─────────────────────────────────────────────────────────
 let names={}, allCards=[], binder=[], cols=4, rows=4;
