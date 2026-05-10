@@ -434,8 +434,13 @@ const FORMS=[
   {s:'otras',dex:720,name:'Hoopa Unbound',    api:'hoopa-unbound'},
 ];
 
-const SB = n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
-const SF = a=>`https://play.pokemonshowdown.com/sprites/home/${a}.png`;
+// ── Cambia esta URL cuando subas los sprites a GitHub Pages ──────────
+// Ejemplo: 'https://dexoon12.github.io/pokedex-sprites'
+// Dejar vacío para usar CDN externo como fallback
+const SPRITE_BASE = '';
+
+const SB = n=>SPRITE_BASE?`${SPRITE_BASE}/${n}.png`:`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
+const SF = a=>SPRITE_BASE?`${SPRITE_BASE}/${a}.png`:`https://play.pokemonshowdown.com/sprites/home/${a}.png`;
 
 // ── State ─────────────────────────────────────────────────────────
 let names={}, allCards=[], binder=[], cols=4, rows=4;
@@ -557,8 +562,10 @@ function removePage(p){
 }
 function moveBinder(from,to){
   if(from===to) return;
+  const insertAt=to>from?to-1:to;
+  if(insertAt===from) return; // adjacent slot = no-op, skip re-render
   const [card]=binder.splice(from,1);
-  binder.splice(to>from?to-1:to,0,card);
+  binder.splice(insertAt,0,card);
   save(); renderBinder();
 }
 
@@ -662,7 +669,10 @@ function setDropTarget(el,idx){
     e.preventDefault();
     clearDI();
     const rect=el.getBoundingClientRect();
-    const before=e.clientX<rect.left+rect.width/2;
+    let before=e.clientX<rect.left+rect.width/2;
+    // Suppress "before" indicator when target is the slot immediately after
+    // the drag source — that would be a no-op insert and looks like a swap
+    if(dragSrc.from==='binder' && before && idx===dragSrc.idx+1) before=false;
     el.classList.add(before?'dob':'doa');
     dropIdx=before?idx:idx+1;
     e.dataTransfer.dropEffect=dragSrc.from==='lib'?'copy':'move';
