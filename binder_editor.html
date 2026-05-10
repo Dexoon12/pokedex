@@ -433,7 +433,7 @@ const FORMS=[
 ];
 
 const SB = n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
-const SF = a=>`https://play.pokemonshowdown.com/sprites/gen5/${a}.png`;
+const SF = a=>`https://play.pokemonshowdown.com/sprites/home/${a}.png`;
 
 // ── State ─────────────────────────────────────────────────────────
 let names={}, allCards=[], binder=[], cols=4, rows=4;
@@ -681,9 +681,22 @@ function setDropTarget(el,idx){
 
 function clearDI(){document.querySelectorAll('.dob,.doa').forEach(e=>e.classList.remove('dob','doa'));}
 
+// ── Sprite cache — prevents flicker on re-render ──────────────────
+const spriteCache=new Map(); // url → src (same key, stored for quick lookup)
+
+function applyCacheToShims(root){
+  root.querySelectorAll('.shim[data-src]').forEach(sh=>{
+    if(!spriteCache.has(sh.dataset.src)) return;
+    const img=new Image();
+    img.src=sh.dataset.src;
+    sh.replaceWith(img);
+  });
+}
+
 // ── Lazy sprites ──────────────────────────────────────────────────
 const _obs={lib:null,binder:null};
 function lazySprites(root, key){
+  applyCacheToShims(root); // instant for already-loaded sprites
   if(_obs[key]) _obs[key].disconnect();
   _obs[key]=new IntersectionObserver(entries=>{
     entries.forEach(e=>{
@@ -692,11 +705,18 @@ function lazySprites(root, key){
       _obs[key].unobserve(sh);
       const img=new Image();
       img.src=sh.dataset.src;
-      img.style.cssText='image-rendering:pixelated;width:50px;height:50px;';
-      img.onload=()=>{if(sh.parentNode) sh.replaceWith(img);};
-      img.onerror=()=>{if(sh.parentNode){sh.style.opacity='.05';sh.style.animation='none';}};
+      img.onload=()=>{
+        spriteCache.set(sh.dataset.src, 1);
+        if(!sh.parentNode) return;
+        img.style.opacity='0';
+        sh.replaceWith(img);
+        requestAnimationFrame(()=>{img.style.transition='opacity .18s';img.style.opacity='1';});
+      };
+      img.onerror=()=>{
+        if(sh.parentNode){sh.style.opacity='.05';sh.style.animation='none';}
+      };
     });
-  },{rootMargin:'120px'});
+  },{rootMargin:'150px'});
   root.querySelectorAll('.shim[data-src]').forEach(sh=>_obs[key].observe(sh));
 }
 
