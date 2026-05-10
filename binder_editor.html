@@ -117,8 +117,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .bslot:not(.bintro):not(.bempty):hover .rm{display:flex;}
 
 /* Drag indicators */
-.bslot.dob::before{content:'';position:absolute;left:-3px;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px;z-index:10;}
-.bslot.doa::after{content:'';position:absolute;right:-3px;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px;z-index:10;}
+.bslot.dob::before{content:'';position:absolute;left:-5px;top:-3px;bottom:-3px;width:5px;background:var(--accent);border-radius:4px;z-index:10;box-shadow:0 0 10px var(--accent),0 0 20px rgba(155,93,229,.4);}
+.bslot.doa::after{content:'';position:absolute;right:-5px;top:-3px;bottom:-3px;width:5px;background:var(--accent);border-radius:4px;z-index:10;box-shadow:0 0 10px var(--accent),0 0 20px rgba(155,93,229,.4);}
+.bslot.dob{margin-left:4px;transition:margin .1s;}
+.bslot.doa{margin-right:4px;transition:margin .1s;}
 .bempty.dob{opacity:.7;border-color:var(--accent)!important;border-style:solid!important;}
 
 /* Intro slot */
@@ -705,14 +707,24 @@ function lazySprites(root, key){
       _obs[key].unobserve(sh);
       const img=new Image();
       img.src=sh.dataset.src;
-      img.onload=()=>{
+      function showImg(imgEl){
         spriteCache.set(sh.dataset.src, 1);
         if(!sh.parentNode) return;
-        img.style.opacity='0';
-        sh.replaceWith(img);
-        requestAnimationFrame(()=>{img.style.transition='opacity .18s';img.style.opacity='1';});
-      };
+        imgEl.style.opacity='0';
+        sh.replaceWith(imgEl);
+        requestAnimationFrame(()=>{imgEl.style.transition='opacity .18s';imgEl.style.opacity='1';});
+      }
+      img.onload=()=>showImg(img);
       img.onerror=()=>{
+        // fallback chain: home → gen5 → pokeapi-number → placeholder
+        const url=sh.dataset.src;
+        if(url.includes('/home/')){
+          const img2=new Image();
+          img2.src=url.replace('/home/','/gen5/');
+          img2.onload=()=>showImg(img2);
+          img2.onerror=()=>{if(sh.parentNode){sh.style.opacity='.05';sh.style.animation='none';}};
+          return;
+        }
         if(sh.parentNode){sh.style.opacity='.05';sh.style.animation='none';}
       };
     });
