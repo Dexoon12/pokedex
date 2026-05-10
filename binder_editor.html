@@ -103,8 +103,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .bslot .cbadge{top:3px;left:auto;right:3px;}
 .bslot.bempty{background:rgba(255,255,255,.02);border-style:dashed;opacity:.3;cursor:default;}
 .bslot.bempty:hover{border-color:rgba(255,255,255,.06);}
-.bslot.bintro{cursor:default;}
+.bslot.bintro{cursor:grab;}
 .bslot.dragging{opacity:.25;}
+
+/* Page delete btn */
+.bpage-lbl{display:flex;align-items:center;gap:4px;}
+.del-page{margin-left:2px;cursor:pointer;color:var(--danger);font-size:9px;opacity:0;transition:opacity .15s;line-height:1;padding:1px 3px;border-radius:3px;}
+.del-page:hover{background:var(--danger);color:#fff;}
+.bpage:hover .del-page{opacity:1;}
 
 /* Remove btn */
 .rm{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--danger);color:#fff;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;line-height:1;font-weight:700;}
@@ -250,7 +256,7 @@ const FORMS=[
   {s:'mega',dex:531,name:'Mega Audino',       api:'audino-mega'},
   {s:'mega',dex:719,name:'Mega Diancie',      api:'diancie-mega'},
   // Pokémon Legends: Z-A (2025) — base game
-  {s:'mega',dex:35, name:'Mega Clefable',     api:'clefable-mega'},
+  {s:'mega',dex:36, name:'Mega Clefable',     api:'clefable-mega'},
   {s:'mega',dex:71, name:'Mega Victreebel',   api:'victreebel-mega'},
   {s:'mega',dex:121,name:'Mega Starmie',      api:'starmie-mega'},
   {s:'mega',dex:149,name:'Mega Dragonite',    api:'dragonite-mega'},
@@ -276,6 +282,14 @@ const FORMS=[
   {s:'mega',dex:718,name:'Mega Zygarde',      api:'zygarde-mega'},
   {s:'mega',dex:780,name:'Mega Drampa',       api:'drampa-mega'},
   // Pokémon Legends: Z-A — DLC Mega Dimension
+  {s:'mega',dex:485,name:'Mega Heatran',      api:'heatran-mega'},
+  {s:'mega',dex:491,name:'Mega Darkrai',      api:'darkrai-mega'},
+  {s:'mega',dex:952,name:'Mega Scovillain',   api:'scovillain-mega'},
+  {s:'mega',dex:970,name:'Mega Glimmora',     api:'glimmora-mega'},
+  {s:'mega',dex:978,name:'Mega Tatsugiri C',  api:'tatsugiri-curly-mega'},
+  {s:'mega',dex:978,name:'Mega Tatsugiri D',  api:'tatsugiri-droopy-mega'},
+  {s:'mega',dex:978,name:'Mega Tatsugiri S',  api:'tatsugiri-stretchy-mega'},
+  {s:'mega',dex:998,name:'Mega Baxcalibur',   api:'baxcalibur-mega'},
   {s:'mega',dex:26, name:'Mega Raichu X',     api:'raichu-mega-x'},
   {s:'mega',dex:26, name:'Mega Raichu Y',     api:'raichu-mega-y'},
   {s:'mega',dex:338,name:'Mega Solrock',      api:'solrock-mega'},
@@ -534,6 +548,11 @@ function removeFromBinder(idx){
   binder.splice(idx,1);
   save(); renderBinder(); renderLib();
 }
+function removePage(p){
+  const spp=cols*rows;
+  binder.splice(p*spp, Math.min(spp, binder.length-p*spp));
+  save(); renderBinder(); renderLib();
+}
 function moveBinder(from,to){
   if(from===to) return;
   const [card]=binder.splice(from,1);
@@ -553,7 +572,11 @@ function renderBinder(){
   for(let p=0;p<nPages;p++){
     const page=document.createElement('div');
     page.className='bpage';
-    page.innerHTML=`<div class="bpage-lbl">Pág. ${p+1}</div>`;
+    const lbl=document.createElement('div');
+    lbl.className='bpage-lbl';
+    lbl.innerHTML=`Pág. ${p+1} <span class="del-page" title="Eliminar hoja">×</span>`;
+    lbl.querySelector('.del-page').addEventListener('click',()=>removePage(p));
+    page.appendChild(lbl);
     const grid=document.createElement('div');
     grid.className='bgrid';
     grid.style.gridTemplateColumns=`repeat(${cols},var(--card-w))`;
@@ -573,6 +596,7 @@ function makeSlot(card,idx){
   const el=document.createElement('div');
   if(card.type==='intro'){
     el.className='bslot bintro';
+    el.draggable=true;
     el.style.background=`linear-gradient(145deg,${card.color}22,${card.color}44)`;
     el.style.borderColor=card.color+'66';
     const big=card.label||card.roman||'?';
@@ -582,6 +606,12 @@ function makeSlot(card,idx){
     el.addEventListener('mouseenter',()=>el.querySelector('.rm').style.display='flex');
     el.addEventListener('mouseleave',()=>el.querySelector('.rm').style.display='none');
     el.querySelector('.rm').addEventListener('click',e=>{e.stopPropagation();removeFromBinder(idx);});
+    el.addEventListener('dragstart',e=>{
+      dragSrc={from:'binder',card,idx};
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    el.addEventListener('dragend',()=>{dragSrc=null;el.classList.remove('dragging');clearDI();});
     setDropTarget(el,idx);
     return el;
   }
