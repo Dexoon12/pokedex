@@ -145,37 +145,47 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 #print-info{font-size:10px;color:#666;margin-left:auto;}
 #print-pages-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-content:start;}
 
-/* Paper page */
-.pp-page{width:8.5in;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.35);padding:.22in .22in .18in;page-break-after:always;display:flex;flex-direction:column;flex-shrink:0;}
-.pp-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #222;padding-bottom:4px;margin-bottom:5px;flex-shrink:0;}
-.pp-title{font-size:10px;font-weight:900;color:#111;letter-spacing:.8px;font-family:'DM Sans',sans-serif;}
-.pp-sub{font-size:6.5px;color:#666;font-family:'DM Sans',sans-serif;text-align:right;}
+/* Paper page — fixed 1-page layout */
+.pp-page{width:8.5in;height:11in;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.35);padding:.2in .2in .18in;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
 
-/* Flat grid layout */
-.pp-flat-grid{display:flex;flex-direction:column;gap:2px;flex:1;}
-.pp-flat-row{display:flex;gap:2px;}
-.pp-intro-banner{width:100%;border:2.5px solid;border-radius:4px;display:flex;align-items:center;padding:0 10px;gap:10px;flex-shrink:0;box-sizing:border-box;}
-.pp-banner-lbl{font-family:'Press Start 2P',monospace;font-size:13px;flex-shrink:0;}
-.pp-banner-name{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;opacity:.9;}
+/* ── Summary header ── */
+.pp-smry-hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #222;padding-bottom:5px;margin-bottom:5px;flex-shrink:0;gap:8px;}
+.pp-smry-title{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:900;color:#111;letter-spacing:.4px;}
+.pp-smry-sub{font-family:'DM Sans',sans-serif;font-size:6.5px;color:#666;margin-top:2px;}
+.pp-smry-legend{display:flex;gap:7px;align-items:center;flex-shrink:0;margin-top:2px;}
+.pp-smry-li{display:flex;align-items:center;gap:2px;font-size:5.5px;color:#555;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.pp-smry-sw{width:7px;height:7px;border:1.5px solid;border-radius:1px;flex-shrink:0;}
 
-/* Print slots */
-.pp-slot{border-radius:2px;border:1.5px solid #e0e0e0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;flex-shrink:0;}
-.pp-empty{background:#f5f5f5;border-style:dashed;opacity:.25;}
-.pp-filler{background:#eee;border-color:#ddd;}
-.pp-mega{border-color:rgba(234,179,8,.7)!important;}
-.pp-gmax{border-color:rgba(74,222,128,.8)!important;}
-.pp-regional{border-color:rgba(251,146,60,.7)!important;}
-.pp-otras{border-color:rgba(100,149,237,.7)!important;}
-.pp-slot img{image-rendering:auto;object-fit:contain;display:block;}
-.pp-num{font-size:4.5px;color:#aaa;line-height:1;font-family:'DM Sans',sans-serif;}
-.pp-name{font-size:4.5px;color:#333;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 1px;font-family:'DM Sans',sans-serif;line-height:1.2;}
-.pp-cbadge{position:absolute;top:1px;right:1px;font-size:3.5px;font-weight:700;padding:1px 2px;border-radius:1px;line-height:1;}
-.pp-bm{background:rgba(234,179,8,.9);color:#000;}
-.pp-bg{background:rgba(74,222,128,.9);color:#000;}
-.pp-br{background:rgba(251,146,60,.9);color:#000;}
-.pp-bo{background:rgba(100,149,237,.9);color:#000;}
+/* ── Section tiles ── */
+.pp-smry-tiles{display:flex;gap:3px;margin-bottom:5px;flex-shrink:0;}
+.pp-smry-tile{border:1.5px solid;border-radius:4px;padding:3px 4px;display:flex;flex-direction:column;flex:1;min-width:0;}
+.pp-tile-lbl{font-family:'Press Start 2P',monospace;font-size:7px;line-height:1.3;margin-bottom:1px;}
+.pp-tile-name{font-family:'DM Sans',sans-serif;font-size:5px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pp-tile-range{font-family:'DM Sans',sans-serif;font-size:4.5px;color:#777;line-height:1.3;}
+.pp-tile-stat{font-family:'DM Sans',sans-serif;font-size:4px;color:#999;line-height:1.3;}
+
+/* ── Page index ── */
+.pp-smry-index{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;flex-shrink:0;align-items:center;max-height:20px;overflow:hidden;}
+.pp-idx-sec{font-family:'Press Start 2P',monospace;font-size:4.5px;padding:1px 3px;border-radius:2px;border:1px solid;line-height:1.8;flex-shrink:0;}
+.pp-idx-pg{font-family:'DM Sans',sans-serif;font-size:5.5px;color:#999;line-height:1.4;min-width:10px;text-align:center;}
+
+/* ── Mini binder pages grid ── */
+.pp-mini-grid{display:grid;gap:2px;grid-auto-rows:1fr;flex:1;min-height:0;}
+.pp-mini-page{background:#f8f8f8;border:1px solid #ccc;border-radius:2px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.pp-mini-lbl{font-family:'DM Sans',sans-serif;font-size:4.5px;color:#bbb;text-align:center;line-height:1.6;flex-shrink:0;padding:0 1px;}
+.pp-mini-inner{display:grid;gap:1px;padding:1px;flex:1;min-height:0;overflow:hidden;}
+.pp-mini-slot{border:1px solid #ececec;border-radius:1px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;min-height:0;min-width:0;}
+.pp-mini-slot img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;}
+.pp-mini-empty{background:#f5f5f5;border-style:dashed!important;opacity:.35;}
+.pp-mini-filler{background:#eee;border-color:#ddd!important;}
+.pp-mini-intro{border-width:1.5px!important;font-family:'Press Start 2P',monospace;font-size:3.5px;text-align:center;line-height:1.1;}
+.pp-mini-mega{border-color:rgba(234,179,8,.6)!important;background:rgba(234,179,8,.06);}
+.pp-mini-gmax{border-color:rgba(74,222,128,.7)!important;background:rgba(74,222,128,.06);}
+.pp-mini-regional{border-color:rgba(251,146,60,.6)!important;background:rgba(251,146,60,.06);}
+.pp-mini-otras{border-color:rgba(100,149,237,.6)!important;background:rgba(100,149,237,.06);}
 
 @media print{
+  @page{size:8.5in 11in portrait;margin:0;}
   body>*{display:none!important;}
   #print-overlay{display:block!important;position:static!important;overflow:visible!important;background:transparent!important;}
   #print-ctrl{display:none!important;}
@@ -1061,95 +1071,161 @@ function buildPrintPages(){
   area.innerHTML='';
   if(!binder.length){ area.innerHTML='<div style="color:#999;font-size:13px;padding:40px">El binder está vacío</div>'; return; }
 
-  const N=printCols;
-  // Paper content width: 8.5in - 2×0.22in = 8.06in = 773.76px; gap between slots = 2px
-  const contentW=773.76;
-  const gap=2;
-  const slotW=(contentW-(N-1)*gap)/N;
-  const slotH=Math.round(slotW*4/3);
-  const rowH=slotH+gap;
-  // Paper content height: 11in - 0.22in top - 0.18in bottom = 10.6in = 1017.6px, minus header ~28px
-  const maxRows=Math.floor((1017.6-28)/rowH);
+  const N=printCols; // mini-page columns per row
+  const spp=cols*rows; // slots per binder page
+  const nPages=Math.ceil(binder.length/spp)||1;
+  const totalCards=binder.filter(c=>c.type!=='intro'&&c.type!=='filler').length;
 
-  // Build row list from flat binder array
-  const rowsList=[];
-  let currentRow=[];
-  for(const item of binder){
-    if(item.type==='intro'){
-      if(currentRow.length) { rowsList.push({type:'cards',cells:[...currentRow]}); currentRow=[]; }
-      rowsList.push({type:'intro',item});
-    } else {
-      currentRow.push(item);
-      if(currentRow.length===N){ rowsList.push({type:'cards',cells:[...currentRow]}); currentRow=[]; }
+  // ── Scan binder: build section stats + page→intro map ──
+  const sectionStats=[]; // {label,name,color,isGen,genId,range,cards,startPage,endPage}
+  const pageIntros={};   // binder page index -> first intro card on that page
+  let curSec=null, secCards=0;
+
+  for(let i=0;i<binder.length;i++){
+    const card=binder[i];
+    const pi=Math.floor(i/spp);
+    if(card.type==='intro'){
+      if(!pageIntros[pi]) pageIntros[pi]=card;
+      if(curSec){ curSec.cards=secCards; curSec.endPage=pi; sectionStats.push(curSec); }
+      curSec={
+        label:card.roman||card.label||'?',
+        name:card.name||'',
+        color:card.color||'#999',
+        isGen:!!card.roman,
+        genId:card.genId||null,
+        range:'',
+        startPage:pi,
+        endPage:nPages-1,
+        cards:0
+      };
+      if(card.genId){ const g=GEN_DATA.find(g=>g.id===card.genId); if(g) curSec.range=`#${String(g.from).padStart(3,'0')}-#${String(g.to).padStart(3,'0')}`; }
+      secCards=0;
+    } else if(card.type!=='filler'){
+      secCards++;
     }
   }
-  if(currentRow.length) rowsList.push({type:'cards',cells:currentRow});
+  if(curSec){ curSec.cards=secCards; curSec.endPage=nPages-1; sectionStats.push(curSec); }
+  sectionStats.forEach(s=>{ s.pages=s.endPage-s.startPage+1; });
 
-  // Paginate rows
-  const pages=[];
-  let page=[];
-  for(const row of rowsList){
-    if(page.length>=maxRows){ pages.push(page); page=[]; }
-    page.push(row);
+  // ── Page index sequence: section marker then page numbers ──
+  const idxItems=[];
+  for(let p=0;p<nPages;p++){
+    if(pageIntros[p]) idxItems.push({type:'sec',item:pageIntros[p]});
+    idxItems.push({type:'pg',num:p+1});
   }
-  if(page.length) pages.push(page);
 
-  const totalCards=binder.filter(c=>c.type!=='intro'&&c.type!=='filler').length;
   document.getElementById('print-info').textContent=
-    `${pages.length} pág${pages.length!==1?'s':''} · ${totalCards} cartas · ${N} col · ${maxRows} filas`;
+    `${nPages} págs · ${totalCards} cartas · ${N} col`;
 
-  pages.forEach((pageRows,pi)=>{
-    const pageEl=document.createElement('div');
-    pageEl.className='pp-page';
+  // ── Build the single paper page ──
+  const pageEl=document.createElement('div');
+  pageEl.className='pp-page';
 
-    // Header
-    const hdr=document.createElement('div');
-    hdr.className='pp-hdr';
-    hdr.innerHTML=`<span class="pp-title">POKÉDEX BINDER</span><span class="pp-sub">${totalCards} cartas · ${N} col · Pág. ${pi+1}/${pages.length}</span>`;
-    pageEl.appendChild(hdr);
+  // 1. Header
+  const hdr=document.createElement('div');
+  hdr.className='pp-smry-hdr';
+  hdr.innerHTML=`<div>
+    <div class="pp-smry-title">POKÉDEX BINDER — POR SECCIONES</div>
+    <div class="pp-smry-sub">Base (#001-#1025) + Formas · ${nPages} páginas · ${cols}×${rows} cartas</div>
+  </div>
+  <div class="pp-smry-legend">
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#3B82F6;background:#3B82F611"></span>Base</span>
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#EAB308;background:#EAB30811"></span>Mega</span>
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#4ADE80;background:#4ADE8011"></span>GMax</span>
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#FB923C;background:#FB923C11"></span>Regional</span>
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#63A3E9;background:#63A3E911"></span>Otras</span>
+    <span class="pp-smry-li"><span class="pp-smry-sw" style="border-color:#ccc;background:#f5f5f5;border-style:dashed"></span>Vacío</span>
+  </div>`;
+  pageEl.appendChild(hdr);
 
-    // Flat grid
-    const gridEl=document.createElement('div');
-    gridEl.className='pp-flat-grid';
-
-    pageRows.forEach(row=>{
-      if(row.type==='intro'){
-        const{item}=row;
-        const lbl=item.roman||item.label||'?';
-        const nm=item.name||'';
-        const el=document.createElement('div');
-        el.className='pp-intro-banner';
-        el.style.cssText=`height:${slotH}px;background:linear-gradient(135deg,${item.color}28,${item.color}50);border-color:${item.color};`;
-        el.innerHTML=`<span class="pp-banner-lbl" style="color:${item.color}">${lbl}</span><span class="pp-banner-name" style="color:${item.color}99">${nm}</span>`;
-        gridEl.appendChild(el);
-      } else {
-        const rowEl=document.createElement('div');
-        rowEl.className='pp-flat-row';
-        row.cells.forEach(card=>{
-          const sl=document.createElement('div');
-          sl.className='pp-slot';
-          sl.style.cssText=`width:${slotW.toFixed(1)}px;height:${slotH}px;`;
-          if(card.type==='filler'){
-            sl.classList.add('pp-filler');
-          } else {
-            const typeMap={mega:'pp-mega',gmax:'pp-gmax',alolan:'pp-regional',galarian:'pp-regional',hisuian:'pp-regional',paldean:'pp-regional',otras:'pp-otras'};
-            if(typeMap[card.s||card.type]) sl.classList.add(typeMap[card.s||card.type]);
-            const b=BADGE[card.s];
-            const nm=cname(card);
-            const num=cnum(card);
-            const imgUrl=printImgUrl(card);
-            const fb=csprite(card);
-            sl.innerHTML=`${b?`<div class="pp-cbadge pp-${b[1]}">${b[0]}</div>`:''}${imgUrl?`<img src="${imgUrl}" loading="lazy" onerror="this.src='${fb}';this.onerror=null" style="width:78%;aspect-ratio:1">`:''}<span class="pp-num">#${String(num||'?').padStart(4,'0')}</span><span class="pp-name" title="${nm}">${nm.slice(0,11)}</span>`;
-          }
-          rowEl.appendChild(sl);
-        });
-        gridEl.appendChild(rowEl);
-      }
-    });
-
-    pageEl.appendChild(gridEl);
-    area.appendChild(pageEl);
+  // 2. Section tiles
+  const tilesEl=document.createElement('div');
+  tilesEl.className='pp-smry-tiles';
+  sectionStats.forEach(sec=>{
+    const tile=document.createElement('div');
+    tile.className='pp-smry-tile';
+    tile.style.cssText=`border-color:${sec.color};background:linear-gradient(145deg,${sec.color}22,${sec.color}3a);`;
+    tile.innerHTML=`<div class="pp-tile-lbl" style="color:${sec.color}">${sec.label}</div>
+      <div class="pp-tile-name" style="color:${sec.color}">${sec.name.toUpperCase()}</div>
+      ${sec.range?`<div class="pp-tile-range">${sec.range}</div>`:''}
+      <div class="pp-tile-stat">${sec.isGen?sec.cards+' poke':sec.cards+' cartas'}</div>
+      ${!sec.isGen?`<div class="pp-tile-stat">${sec.pages} pág</div>`:''}`;
+    tilesEl.appendChild(tile);
   });
+  pageEl.appendChild(tilesEl);
+
+  // 3. Page index
+  const idxEl=document.createElement('div');
+  idxEl.className='pp-smry-index';
+  idxItems.forEach(item=>{
+    if(item.type==='sec'){
+      const mk=document.createElement('span');
+      mk.className='pp-idx-sec';
+      mk.style.cssText=`color:${item.item.color};background:${item.item.color}22;border-color:${item.item.color}77;`;
+      mk.textContent=item.item.roman||item.item.label||'?';
+      idxEl.appendChild(mk);
+    } else {
+      const pg=document.createElement('span');
+      pg.className='pp-idx-pg';
+      pg.textContent=item.num;
+      idxEl.appendChild(pg);
+    }
+  });
+  pageEl.appendChild(idxEl);
+
+  // 4. Mini binder pages grid
+  const miniGrid=document.createElement('div');
+  miniGrid.className='pp-mini-grid';
+  miniGrid.style.gridTemplateColumns=`repeat(${N},1fr)`;
+
+  for(let p=0;p<nPages;p++){
+    const mp=document.createElement('div');
+    mp.className='pp-mini-page';
+
+    const lbl=document.createElement('div');
+    lbl.className='pp-mini-lbl';
+    lbl.textContent=p+1;
+    mp.appendChild(lbl);
+
+    const inner=document.createElement('div');
+    inner.className='pp-mini-inner';
+    inner.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+    inner.style.gridTemplateRows=`repeat(${rows},1fr)`;
+
+    for(let s=0;s<spp;s++){
+      const idx=p*spp+s;
+      const card=binder[idx];
+      const sl=document.createElement('div');
+      sl.className='pp-mini-slot';
+
+      if(!card){
+        sl.classList.add('pp-mini-empty');
+      } else if(card.type==='filler'){
+        sl.classList.add('pp-mini-filler');
+      } else if(card.type==='intro'){
+        sl.classList.add('pp-mini-intro');
+        sl.style.cssText=`background:linear-gradient(145deg,${card.color}33,${card.color}55);border-color:${card.color}99;color:${card.color};`;
+        sl.textContent=card.roman||card.label||'?';
+      } else {
+        const tmap={mega:'pp-mini-mega',gmax:'pp-mini-gmax',alolan:'pp-mini-regional',galarian:'pp-mini-regional',hisuian:'pp-mini-regional',paldean:'pp-mini-regional',otras:'pp-mini-otras'};
+        if(tmap[card.s]) sl.classList.add(tmap[card.s]);
+        const imgUrl=printImgUrl(card);
+        const fb=csprite(card);
+        if(imgUrl){
+          const img=document.createElement('img');
+          img.loading='lazy';
+          img.src=imgUrl;
+          img.onerror=()=>{ img.src=fb; img.onerror=null; };
+          sl.appendChild(img);
+        }
+      }
+      inner.appendChild(sl);
+    }
+    mp.appendChild(inner);
+    miniGrid.appendChild(mp);
+  }
+  pageEl.appendChild(miniGrid);
+  area.appendChild(pageEl);
 }
 
 function openPrintPreview(){
