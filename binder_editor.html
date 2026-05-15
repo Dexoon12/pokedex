@@ -1178,7 +1178,8 @@ function buildPrintPages(){
         sl.classList.add('pp-mini-filler');
       } else if(card.type==='intro'){
         sl.classList.add('pp-mini-intro');
-        sl.style.cssText=`background:linear-gradient(145deg,${card.color}33,${card.color}55);border-color:${card.color}88;`;
+        sl.style.cssText=`background:linear-gradient(145deg,${card.color}33,${card.color}55);border-color:${card.color}88;color:${card.color};`;
+        sl.textContent=card.roman||card.label||'?';
       } else {
         const tmap={mega:'pp-mini-mega',gmax:'pp-mini-gmax',alolan:'pp-mini-regional',galarian:'pp-mini-regional',hisuian:'pp-mini-regional',paldean:'pp-mini-regional',otras:'pp-mini-otras'};
         if(tmap[card.s]) sl.classList.add(tmap[card.s]);
