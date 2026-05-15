@@ -157,10 +157,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .pp-smry-sw{width:7px;height:7px;border:1.5px solid;border-radius:1px;flex-shrink:0;}
 
 /* ── Section tiles ── */
-.pp-smry-tiles{display:flex;gap:3px;margin-bottom:5px;flex-shrink:0;}
-.pp-smry-tile{border:1.5px solid;border-radius:4px;padding:3px 4px;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;}
-.pp-tile-lbl{font-family:'Press Start 2P',monospace;font-size:8px;line-height:1.4;margin-bottom:1px;}
-.pp-tile-name{font-family:'DM Sans',sans-serif;font-size:5.5px;font-weight:700;line-height:1.3;overflow:hidden;}
+.pp-smry-tiles{display:flex;gap:2px;margin-bottom:5px;flex-shrink:0;}
+.pp-smry-tile{border:1.5px solid;border-radius:3px;padding:2px 3px;display:flex;flex-direction:column;flex:1;min-width:0;overflow:hidden;}
+.pp-tile-lbl{font-family:'Press Start 2P',monospace;font-size:7px;line-height:1.4;flex-shrink:0;}
+.pp-tile-name{font-family:'DM Sans',sans-serif;font-size:4.5px;font-weight:700;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-clamp:2;}
+.pp-tile-range{font-family:'DM Sans',sans-serif;font-size:3.8px;color:#666;line-height:1.3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.pp-tile-stat{font-family:'DM Sans',sans-serif;font-size:3.5px;color:#999;line-height:1.3;overflow:hidden;white-space:nowrap;}
 
 /* ── Page index ── */
 .pp-smry-index{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;flex-shrink:0;align-items:center;max-height:26px;overflow:hidden;}
@@ -1105,13 +1107,6 @@ function buildPrintPages(){
   if(curSec){ curSec.cards=secCards; curSec.endPage=nPages-1; sectionStats.push(curSec); }
   sectionStats.forEach(s=>{ s.pages=s.endPage-s.startPage+1; });
 
-  // ── Page index sequence: section marker then page numbers ──
-  const idxItems=[];
-  for(let p=0;p<nPages;p++){
-    if(pageIntros[p]) idxItems.push({type:'sec',item:pageIntros[p]});
-    idxItems.push({type:'pg',num:p+1});
-  }
-
   document.getElementById('print-info').textContent=
     `${nPages} págs · ${totalCards} cartas · ${N} col`;
 
@@ -1144,31 +1139,15 @@ function buildPrintPages(){
     tile.className='pp-smry-tile';
     tile.style.cssText=`border-color:${sec.color};background:linear-gradient(145deg,${sec.color}22,${sec.color}3a);`;
     tile.innerHTML=`<div class="pp-tile-lbl" style="color:${sec.color}">${sec.label}</div>
-      <div class="pp-tile-name" style="color:${sec.color}">${sec.name.toUpperCase()}</div>`;
+      <div class="pp-tile-name" style="color:${sec.color}">${sec.name.toUpperCase()}</div>
+      ${sec.range?`<div class="pp-tile-range">${sec.range}</div>`:''}
+      <div class="pp-tile-stat">${sec.isGen?sec.cards+' poke':sec.cards+' cartas'}</div>
+      ${!sec.isGen?`<div class="pp-tile-stat">${sec.pages} pág</div>`:''}`;
     tilesEl.appendChild(tile);
   });
   pageEl.appendChild(tilesEl);
 
-  // 3. Page index
-  const idxEl=document.createElement('div');
-  idxEl.className='pp-smry-index';
-  idxItems.forEach(item=>{
-    if(item.type==='sec'){
-      const mk=document.createElement('span');
-      mk.className='pp-idx-sec';
-      mk.style.cssText=`color:${item.item.color};background:${item.item.color}22;border-color:${item.item.color}77;`;
-      mk.textContent=item.item.roman||item.item.label||'?';
-      idxEl.appendChild(mk);
-    } else {
-      const pg=document.createElement('span');
-      pg.className='pp-idx-pg';
-      pg.textContent=item.num;
-      idxEl.appendChild(pg);
-    }
-  });
-  pageEl.appendChild(idxEl);
-
-  // 4. Mini binder pages grid
+  // 3. Mini binder pages grid
   const miniGrid=document.createElement('div');
   miniGrid.className='pp-mini-grid';
   miniGrid.style.gridTemplateColumns=`repeat(${N},1fr)`;
