@@ -218,7 +218,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
     <p id="share-subtitle"></p>
     <div class="sheet-option" id="opt-print">
       <div class="s-icon" style="background:#fff3e0">🖨️</div>
-      <div><b>Guardar como PDF</b><span>Grilla visual de la sección actual</span></div>
+      <div><b>PDF completo</b><span>Grilla visual de la sección actual</span></div>
+    </div>
+    <div class="sheet-option" id="opt-print-pending">
+      <div class="s-icon" style="background:#fce4ec">📋</div>
+      <div><b>PDF pendientes</b><span>Solo los que faltan capturar</span></div>
     </div>
     <div class="sheet-option" id="opt-share">
       <div class="s-icon" style="background:#e8f5e9">📤</div>
@@ -303,6 +307,7 @@ const GENS = [
 ];
 
 const SECTIONS = [
+  {id:'todo',    label:'Todo',     color:'#555555'},
   {id:'base',    label:'Base',     color:'#3B82F6'},
   {id:'mega',    label:'Mega',     color:'#8B6914'},
   {id:'gmax',    label:'GMax',     color:'#1B5E20'},
@@ -361,6 +366,7 @@ const FORMS = [
   {s:'mega',dex:428,name:'Mega Lopunny',      api:'lopunny-mega'},
   {s:'mega',dex:445,name:'Mega Garchomp',     api:'garchomp-mega'},
   {s:'mega',dex:448,name:'Mega Lucario',      api:'lucario-mega'},
+  {s:'mega',dex:448,name:'Mega Lucario Z',   api:'lucario-mega-z',              img:'https://static.rotomlabs.net/images/official-artwork/0448-lucario-mega-z.webp'},
   {s:'mega',dex:460,name:'Mega Abomasnow',    api:'abomasnow-mega'},
   {s:'mega',dex:475,name:'Mega Gallade',      api:'gallade-mega'},
   {s:'mega',dex:531,name:'Mega Audino',       api:'audino-mega'},
@@ -445,8 +451,8 @@ const FORMS = [
   {s:'galarian',dex:555,name:'Darmanitan Galarian',  api:'darmanitan-galar-standard'},
   {s:'galarian',dex:562,name:'Yamask Galarian',      api:'yamask-galar'},
   {s:'galarian',dex:618,name:'Stunfisk Galarian',    api:'stunfisk-galar'},
-  {s:'galarian',dex:888,name:'Zacian Crowned',       api:'zacian-crowned'},
-  {s:'galarian',dex:889,name:'Zamazenta Crowned',    api:'zamazenta-crowned'},
+  {s:'galarian',dex:888,name:'Zacian Crowned',       api:'zacian-crowned',    img:'https://static.rotomlabs.net/images/official-artwork/0888-zacian-crowned-sword.webp'},
+  {s:'galarian',dex:889,name:'Zamazenta Crowned',    api:'zamazenta-crowned', img:'https://static.rotomlabs.net/images/official-artwork/0889-zamazenta-crowned-shield.webp'},
   // ── Hisuian ──────────────────────────────────────────────────
   {s:'hisuian',dex:58, name:'Growlithe Hisuian',  api:'growlithe-hisui'},
   {s:'hisuian',dex:59, name:'Arcanine Hisuian',   api:'arcanine-hisui'},
@@ -464,14 +470,16 @@ const FORMS = [
   {s:'hisuian',dex:706,name:'Goodra Hisuian',     api:'goodra-hisui'},
   {s:'hisuian',dex:713,name:'Avalugg Hisuian',    api:'avalugg-hisui'},
   {s:'hisuian',dex:724,name:'Decidueye Hisuian',  api:'decidueye-hisui'},
+  {s:'hisuian',dex:550,name:'Basculin White',      api:'basculin-white-striped',   img:'https://static.rotomlabs.net/images/official-artwork/0550-basculin-white-striped.webp'},
+  {s:'hisuian',dex:902,name:'Basculegion Female',  api:'basculegion-f',            img:'https://static.rotomlabs.net/images/official-artwork/0902-basculegion-female.webp'},
   // ── Paldean ──────────────────────────────────────────────────
-  {s:'paldean',dex:128, name:'Tauros Combat',        api:'tauros-paldea-combat-breed'},
-  {s:'paldean',dex:128, name:'Tauros Blaze',         api:'tauros-paldea-blaze-breed'},
-  {s:'paldean',dex:128, name:'Tauros Aqua',          api:'tauros-paldea-aqua-breed'},
+  {s:'paldean',dex:128, name:'Tauros Combat',        api:'tauros-paldea-combat-breed', img:'https://static.rotomlabs.net/images/official-artwork/0128-tauros-paldean-combat-breed.webp'},
+  {s:'paldean',dex:128, name:'Tauros Blaze',         api:'tauros-paldea-blaze-breed',  img:'https://static.rotomlabs.net/images/official-artwork/0128-tauros-paldean-blaze-breed.webp'},
+  {s:'paldean',dex:128, name:'Tauros Aqua',          api:'tauros-paldea-aqua-breed',   img:'https://static.rotomlabs.net/images/official-artwork/0128-tauros-paldean-aqua-breed.webp'},
   {s:'paldean',dex:194, name:'Wooper Paldean',       api:'wooper-paldea'},
-  {s:'paldean',dex:1017,name:'Ogerpon Wellspring',   api:'ogerpon-wellspring-mask'},
-  {s:'paldean',dex:1017,name:'Ogerpon Hearthflame',  api:'ogerpon-hearthflame-mask'},
-  {s:'paldean',dex:1017,name:'Ogerpon Cornerstone',  api:'ogerpon-cornerstone-mask'},
+  {s:'paldean',dex:1017,name:'Ogerpon Wellspring',   api:'ogerpon-wellspring-mask',  img:'https://static.rotomlabs.net/images/official-artwork/1017-ogerpon-wellspring-mask.webp'},
+  {s:'paldean',dex:1017,name:'Ogerpon Hearthflame',  api:'ogerpon-hearthflame-mask', img:'https://static.rotomlabs.net/images/official-artwork/1017-ogerpon-hearthflame-mask.webp'},
+  {s:'paldean',dex:1017,name:'Ogerpon Cornerstone',  api:'ogerpon-cornerstone-mask', img:'https://static.rotomlabs.net/images/official-artwork/1017-ogerpon-cornerstone-mask.webp'},
   // ── Otras formas ─────────────────────────────────────────────
   {s:'otras',dex:386,name:'Deoxys Attack',        api:'deoxys-attack'},
   {s:'otras',dex:386,name:'Deoxys Defense',       api:'deoxys-defense'},
@@ -483,22 +491,58 @@ const FORMS = [
   {s:'otras',dex:479,name:'Rotom Mow',            api:'rotom-mow'},
   {s:'otras',dex:487,name:'Giratina Origin',      api:'giratina-origin'},
   {s:'otras',dex:492,name:'Shaymin Sky',          api:'shaymin-sky'},
-  {s:'otras',dex:555,name:'Darmanitan Zen',       api:'darmanitan-zen'},
-  {s:'otras',dex:555,name:'Darmanitan Galar Zen', api:'darmanitan-galar-zen'},
+  {s:'otras',dex:555,name:'Darmanitan Zen',       api:'darmanitan-zen',       img:'https://static.rotomlabs.net/images/official-artwork/0555-darmanitan-zen-mode.webp'},
+  {s:'otras',dex:555,name:'Darmanitan Galar Zen', api:'darmanitan-galar-zen', img:'https://static.rotomlabs.net/images/official-artwork/0555-darmanitan-galarian-zen-mode.webp'},
   {s:'otras',dex:641,name:'Tornadus Therian',     api:'tornadus-therian'},
   {s:'otras',dex:642,name:'Thundurus Therian',    api:'thundurus-therian'},
   {s:'otras',dex:645,name:'Landorus Therian',     api:'landorus-therian'},
   {s:'otras',dex:646,name:'Kyurem Black',         api:'kyurem-black'},
   {s:'otras',dex:646,name:'Kyurem White',         api:'kyurem-white'},
   {s:'otras',dex:648,name:'Meloetta Pirouette',   api:'meloetta-pirouette'},
-  {s:'otras',dex:718,name:'Zygarde 10%',          api:'zygarde-10'},
-  {s:'otras',dex:718,name:'Zygarde Complete',     api:'zygarde-complete'},
+  {s:'otras',dex:718,name:'Zygarde 10%',          api:'zygarde-10',           img:'https://static.rotomlabs.net/images/official-artwork/0718-zygarde-ten-percent.webp'},
+  {s:'otras',dex:718,name:'Zygarde Complete',     api:'zygarde-complete',     img:'https://static.rotomlabs.net/images/official-artwork/0718-zygarde-complete.webp'},
   {s:'otras',dex:746,name:'Wishiwashi School',    api:'wishiwashi-school'},
-  {s:'otras',dex:892,name:'Urshifu Rapid Strike', api:'urshifu-rapid-strike'},
-  {s:'otras',dex:898,name:'Calyrex Ice Rider',    api:'calyrex-ice'},
-  {s:'otras',dex:898,name:'Calyrex Shadow Rider', api:'calyrex-shadow'},
+  {s:'otras',dex:892,name:'Urshifu Rapid Strike', api:'urshifu-rapid-strike', img:'https://static.rotomlabs.net/images/official-artwork/0892-urshifu-rapid-strike-style.webp'},
+  {s:'otras',dex:898,name:'Calyrex Ice Rider',    api:'calyrex-ice',    img:'https://static.rotomlabs.net/images/official-artwork/0898-calyrex-ice-rider.webp'},
+  {s:'otras',dex:898,name:'Calyrex Shadow Rider', api:'calyrex-shadow', img:'https://static.rotomlabs.net/images/official-artwork/0898-calyrex-shadow-rider.webp'},
+  {s:'otras',dex:890,name:'Eternatus Eternamax', api:'eternatus-eternamax',   img:'https://static.rotomlabs.net/images/official-artwork/0890-eternatus-eternamax.webp'},
   {s:'otras',dex:905,name:'Enamorus Therian',     api:'enamorus-therian'},
-  {s:'otras',dex:980,name:'Palafin Hero',         api:'palafin-hero'},
+  {s:'otras',dex:964,name:'Palafin Hero',         api:'palafin-hero',   img:'https://static.rotomlabs.net/images/official-artwork/0964-palafin-hero.webp'},
+  // ── Formas adicionales ───────────────────────────────────────
+  {s:'otras',dex:351,name:'Castform Soleado',     api:'castform-sunny',              img:'https://static.rotomlabs.net/images/official-artwork/0351-castform-sunny.webp'},
+  {s:'otras',dex:351,name:'Castform Lluvioso',    api:'castform-rainy',              img:'https://static.rotomlabs.net/images/official-artwork/0351-castform-rainy.webp'},
+  {s:'otras',dex:351,name:'Castform Nevado',      api:'castform-snowy',              img:'https://static.rotomlabs.net/images/official-artwork/0351-castform-snowy.webp'},
+  {s:'otras',dex:412,name:'Burmy Arena',          api:'burmy-sandy',                 img:'https://static.rotomlabs.net/images/official-artwork/0412-burmy-sandy-cloak.webp'},
+  {s:'otras',dex:412,name:'Burmy Basura',         api:'burmy-trash',                 img:'https://static.rotomlabs.net/images/official-artwork/0412-burmy-trash-cloak.webp'},
+  {s:'otras',dex:413,name:'Wormadam Arena',       api:'wormadam-sandy',              img:'https://static.rotomlabs.net/images/official-artwork/0413-wormadam-sandy-cloak.webp'},
+  {s:'otras',dex:413,name:'Wormadam Basura',      api:'wormadam-trash',              img:'https://static.rotomlabs.net/images/official-artwork/0413-wormadam-trash-cloak.webp'},
+  {s:'otras',dex:422,name:'Shellos Mar Este',     api:'shellos-east',                img:'https://static.rotomlabs.net/images/official-artwork/0422-shellos-east-sea.webp'},
+  {s:'otras',dex:423,name:'Gastrodon Mar Este',   api:'gastrodon-east',              img:'https://static.rotomlabs.net/images/official-artwork/0423-gastrodon-east-sea.webp'},
+  {s:'otras',dex:550,name:'Basculin Blue',        api:'basculin-blue-striped',       img:'https://static.rotomlabs.net/images/official-artwork/0550-basculin-blue-striped.webp'},
+  {s:'otras',dex:678,name:'Meowstic Female',      api:'meowstic-f',                  img:'https://static.rotomlabs.net/images/official-artwork/0678-meowstic-female.webp'},
+  {s:'otras',dex:741,name:'Oricorio Pompom',      api:'oricorio-pompom',             img:'https://static.rotomlabs.net/images/official-artwork/0741-oricorio-pom-pom-style.webp'},
+  {s:'otras',dex:741,name:"Oricorio Pa'u",        api:'oricorio-pau',                img:'https://static.rotomlabs.net/images/official-artwork/0741-oricorio-pau-style.webp'},
+  {s:'otras',dex:741,name:'Oricorio Sensu',       api:'oricorio-sensu',              img:'https://static.rotomlabs.net/images/official-artwork/0741-oricorio-sensu-style.webp'},
+  {s:'otras',dex:774,name:'Minior Rojo Core',     api:'minior-red',                  img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-red-core.webp'},
+  {s:'otras',dex:774,name:'Minior Naranja Core',  api:'minior-orange',               img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-orange-core.webp'},
+  {s:'otras',dex:774,name:'Minior Amarillo Core', api:'minior-yellow',               img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-yellow-core.webp'},
+  {s:'otras',dex:774,name:'Minior Verde Core',    api:'minior-green',                img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-green-core.webp'},
+  {s:'otras',dex:774,name:'Minior Azul Core',     api:'minior-blue',                 img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-blue-core.webp'},
+  {s:'otras',dex:774,name:'Minior Índigo Core',   api:'minior-indigo',               img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-indigo-core.webp'},
+  {s:'otras',dex:774,name:'Minior Violeta Core',  api:'minior-violet',               img:'https://static.rotomlabs.net/images/official-artwork/0774-minior-violet-core.webp'},
+  {s:'otras',dex:849,name:'Toxtricity Low Key',   api:'toxtricity-low-key',          img:'https://static.rotomlabs.net/images/official-artwork/0849-toxtricity-low-key.webp'},
+  {s:'otras',dex:876,name:'Indeedee Female',      api:'indeedee-f',                  img:'https://static.rotomlabs.net/images/official-artwork/0876-indeedee-female.webp'},
+  {s:'otras',dex:877,name:'Morpeko Hangry',       api:'morpeko-hangry',              img:'https://static.rotomlabs.net/images/official-artwork/0877-morpeko-hangry-mode.webp'},
+  {s:'otras',dex:916,name:'Oinkologne Female',    api:'oinkologne-f',                img:'https://static.rotomlabs.net/images/official-artwork/0916-oinkologne-female.webp'},
+  {s:'otras',dex:925,name:'Maushold Familia 4',   api:'maushold-family-of-four',     img:'https://static.rotomlabs.net/images/official-artwork/0925-maushold-family-of-four.webp'},
+  {s:'otras',dex:931,name:'Squawkabilly Azul',    api:'squawkabilly-blue-plumage',   img:'https://static.rotomlabs.net/images/official-artwork/0931-squawkabilly-blue-plumage.webp'},
+  {s:'otras',dex:931,name:'Squawkabilly Amarillo',api:'squawkabilly-yellow-plumage', img:'https://static.rotomlabs.net/images/official-artwork/0931-squawkabilly-yellow-plumage.webp'},
+  {s:'otras',dex:931,name:'Squawkabilly Blanco',  api:'squawkabilly-white-plumage',  img:'https://static.rotomlabs.net/images/official-artwork/0931-squawkabilly-white-plumage.webp'},
+  {s:'otras',dex:1012,name:'Tatsugiri Droopy',    api:'tatsugiri-droopy',            img:'https://static.rotomlabs.net/images/official-artwork/1012-tatsugiri-droopy.webp'},
+  {s:'otras',dex:1012,name:'Tatsugiri Stretchy',  api:'tatsugiri-stretchy',          img:'https://static.rotomlabs.net/images/official-artwork/1012-tatsugiri-stretchy.webp'},
+  {s:'otras',dex:658,name:'Greninja Bond',         api:'greninja-battle-bond',        img:'https://static.rotomlabs.net/images/official-artwork/0658-greninja-battle-bond.webp'},
+  {s:'otras',dex:670,name:'Floette Eternal',       api:'floette-eternal-flower',      img:'https://static.rotomlabs.net/images/official-artwork/0670-floette-eternal-flower.webp'},
+  {s:'otras',dex:801,name:'Magearna Original',     api:'magearna-original',           img:'https://static.rotomlabs.net/images/official-artwork/0801-magearna-original-color.webp'},
 ];
 
 // ── Estado ────────────────────────────────────────────────────────
@@ -541,7 +585,10 @@ function calcStats() {
   const grandTotal = 1025 + FORMS.length;
   const total = Object.values(checked).filter(Boolean).length;
   let secDone, secTotal;
-  if (activeSection === 'base') {
+  if (activeSection === 'todo') {
+    secDone  = total;
+    secTotal = grandTotal;
+  } else if (activeSection === 'base') {
     secDone  = baseMons.filter(m => checked[String(m.num)]).length;
     secTotal = 1025;
   } else {
@@ -574,7 +621,7 @@ function isVisible(mon) {
     const q = query.toLowerCase();
     if (!mon.name.toLowerCase().includes(q) && !String(mon.dex ?? mon.num).includes(q)) return false;
   }
-  if (activeSection === 'base' && activeGen !== 0) {
+  if ((activeSection === 'base' || activeSection === 'todo') && activeGen !== 0) {
     const g = GENS[activeGen - 1];
     if (mon.num < g.s || mon.num > g.e) return false;
   }
@@ -586,7 +633,19 @@ function renderGrid() {
   const empty = document.getElementById('empty');
 
   let mons;
-  if (activeSection === 'base') {
+  if (activeSection === 'todo') {
+    const baseList = baseMons.map(m => ({
+      ...m, _id: String(m.num), _color: genOf(m.num).c,
+      _label: `#${String(m.num).padStart(4,'0')}`,
+      _sprite: `${SPRITE}${m.num}.png`, _sort: m.num * 10,
+    }));
+    const formList = FORMS.map(f => ({
+      ...f, num: f.dex, _id: formKey(f), _color: secOf(f.s).color,
+      _label: `#${String(f.dex).padStart(4,'0')}`,
+      _sprite: formSprites[f.api] || f.img || '', _sort: f.dex * 10 + 5,
+    }));
+    mons = [...baseList, ...formList].sort((a, b) => a._sort - b._sort);
+  } else if (activeSection === 'base') {
     mons = baseMons.map(m => ({
       ...m, _id: String(m.num), _color: genOf(m.num).c,
       _label: `#${String(m.num).padStart(4,'0')}`,
@@ -596,7 +655,7 @@ function renderGrid() {
     mons = secForms(activeSection).map(f => ({
       ...f, num: f.dex, _id: formKey(f), _color: secOf(f.s).color,
       _label: `#${String(f.dex).padStart(4,'0')}`,
-      _sprite: formSprites[f.api] || '',
+      _sprite: formSprites[f.api] || f.img || '',
     }));
   }
 
@@ -671,7 +730,9 @@ async function loadFormSprites() {
 function buildSectionTabs() {
   const scroll = document.getElementById('section-scroll');
   SECTIONS.forEach(sec => {
-    const total = sec.id === 'base' ? 1025 : secForms(sec.id).length;
+    const total = sec.id === 'todo' ? 1025 + FORMS.length
+                : sec.id === 'base' ? 1025
+                : secForms(sec.id).length;
     const chip  = document.createElement('span');
     chip.className   = 'sec-chip' + (sec.id === 'base' ? ' active' : '');
     chip.dataset.sec = sec.id;
@@ -686,8 +747,9 @@ function buildSectionTabs() {
         c.classList.toggle('active', on);
         c.style.background = on ? secOf(c.dataset.sec).color : '';
       });
-      document.getElementById('gen-scroll').classList.toggle('hidden', sec.id !== 'base');
-      if (sec.id === 'base') resetGenChips();
+      const showGen = sec.id === 'base' || sec.id === 'todo';
+      document.getElementById('gen-scroll').classList.toggle('hidden', !showGen);
+      if (showGen) resetGenChips();
       updateStats();
       renderGrid();
     });
@@ -810,31 +872,46 @@ document.getElementById('opt-share').addEventListener('click', () => {
   else navigator.clipboard.writeText(txt).then(() => showToast('Copiado')).catch(() => prompt('', txt));
 });
 
-document.getElementById('opt-print').addEventListener('click', () => {
+function doPrint(pendingOnly) {
   document.getElementById('share-modal').classList.remove('open');
   const { total, grandTotal } = calcStats();
   const wrap = document.getElementById('print-wrap');
   wrap.innerHTML = '';
 
   let mons;
-  if (activeSection === 'base') {
+  if (activeSection === 'todo') {
+    const baseList = baseMons.map(m => ({
+      id: String(m.num), name: m.name,
+      sprite: `${SPRITE}${m.num}.png`, color: genOf(m.num).c,
+      label: `#${String(m.num).padStart(4,'0')}`, sort: m.num * 10,
+    }));
+    const formList = FORMS.map(f => ({
+      id: formKey(f), name: f.name,
+      sprite: formSprites[f.api] || f.img || '', color: secOf(f.s).color,
+      label: `#${String(f.dex).padStart(4,'0')}`, sort: f.dex * 10 + 5,
+    }));
+    mons = [...baseList, ...formList].sort((a, b) => a.sort - b.sort);
+  } else if (activeSection === 'base') {
     mons = baseMons.map(m => ({
       id: String(m.num), name: m.name,
-      sprite: `${SPRITE}${m.num}.png`,
-      color: genOf(m.num).c,
+      sprite: `${SPRITE}${m.num}.png`, color: genOf(m.num).c,
       label: `#${String(m.num).padStart(4,'0')}`,
     }));
   } else {
     mons = secForms(activeSection).map(f => ({
       id: formKey(f), name: f.name,
-      sprite: formSprites[f.api] || '',
-      color: secOf(f.s).color,
+      sprite: formSprites[f.api] || f.img || '', color: secOf(f.s).color,
       label: `#${String(f.dex).padStart(4,'0')}`,
     }));
   }
 
-  const pages = Math.ceil(mons.length / PER_PAGE);
+  if (pendingOnly) mons = mons.filter(m => !checked[m.id]);
+
   const sec   = secOf(activeSection);
+  const label = (pendingOnly ? 'PENDIENTES' : sec.label.toUpperCase());
+  const pages = Math.ceil(mons.length / PER_PAGE);
+  const pendingCount = mons.length;
+
   for (let p = 0; p < pages; p++) {
     const slice  = mons.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
     const blanks = PER_PAGE - slice.length;
@@ -853,14 +930,16 @@ document.getElementById('opt-print').addEventListener('click', () => {
     page.className = 'print-page';
     page.innerHTML = `
       <div class="print-header">
-        <span class="print-title">POKÉDEX — ${sec.label.toUpperCase()}</span>
-        <span class="print-sub">${total}/${grandTotal} total · Pág ${p+1}/${pages}</span>
+        <span class="print-title">POKÉDEX — ${label}</span>
+        <span class="print-sub">${pendingOnly ? pendingCount + ' pendientes' : total + '/' + grandTotal + ' total'} · Pág ${p+1}/${pages}</span>
       </div>
       <div class="print-grid">${cells}</div>`;
     wrap.appendChild(page);
   }
   setTimeout(() => window.print(), 250);
-});
+}
+document.getElementById('opt-print').addEventListener('click', () => doPrint(false));
+document.getElementById('opt-print-pending').addEventListener('click', () => doPrint(true));
 
 // ── Search / Filter ───────────────────────────────────────────────
 document.getElementById('search').addEventListener('input', e => { query = e.target.value; renderGrid(); });
