@@ -131,6 +131,60 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 /* Push-to-next-page btn */
 .push{position:absolute;bottom:2px;right:2px;width:15px;height:15px;border-radius:50%;background:#2563eb;color:#fff;font-size:8px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;line-height:1;font-weight:700;}
 .bslot:not(.bempty):hover .push{display:flex;}
+
+/* ── Print overlay ── */
+#print-overlay{display:none;position:fixed;inset:0;z-index:200;background:#b8b8b8;flex-direction:column;}
+#print-overlay.open{display:flex;}
+#print-ctrl{background:#1a1a24;color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.1);}
+#print-ctrl .logo{font-family:'Press Start 2P',monospace;font-size:6px;color:#9B5DE5;line-height:2;}
+.popt-group{display:flex;align-items:center;gap:5px;}
+.popt-lbl{font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.popt-btn{padding:3px 9px;border-radius:5px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#777;font-size:9px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.popt-btn:hover:not(.active){color:#fff;}
+.popt-btn.active{background:#9B5DE5;border-color:#9B5DE5;color:#fff;}
+#print-info{font-size:10px;color:#666;margin-left:auto;}
+#print-pages-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-content:start;}
+
+/* Paper page */
+.pp-page{width:8.5in;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.35);padding:.22in .22in .18in;page-break-after:always;display:flex;flex-direction:column;flex-shrink:0;}
+.pp-hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #111;padding-bottom:5px;margin-bottom:7px;flex-shrink:0;gap:8px;}
+.pp-title{font-size:11px;font-weight:900;color:#111;letter-spacing:.8px;font-family:'DM Sans',sans-serif;}
+.pp-sub{font-size:7px;color:#666;font-family:'DM Sans',sans-serif;text-align:right;line-height:1.5;}
+.pp-legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.pp-li{display:flex;align-items:center;gap:3px;font-size:6.5px;color:#555;font-family:'DM Sans',sans-serif;}
+.pp-sw{width:9px;height:9px;border:1.5px solid;border-radius:1px;flex-shrink:0;}
+.pp-bpages{flex:1;display:grid;gap:7px;}
+.pp-bpage{background:#f2f2f2;border:1px solid #ccc;border-radius:5px;padding:5px;display:flex;flex-direction:column;}
+.pp-bpage-lbl{font-size:6px;color:#999;text-align:center;margin-bottom:3px;font-family:'DM Sans',sans-serif;flex-shrink:0;}
+.pp-bgrid{display:grid;gap:2px;flex:1;}
+
+/* Print slots */
+.pp-slot{border-radius:2px;border:1.5px solid #e0e0e0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.pp-empty{background:#f5f5f5;border-style:dashed;opacity:.25;}
+.pp-filler{background:#eee;border-color:#ddd;}
+.pp-intro{border-width:2px;}
+.pp-mega{border-color:rgba(234,179,8,.7)!important;}
+.pp-gmax{border-color:rgba(74,222,128,.8)!important;}
+.pp-regional{border-color:rgba(251,146,60,.7)!important;}
+.pp-otras{border-color:rgba(100,149,237,.7)!important;}
+.pp-slot img{image-rendering:pixelated;object-fit:contain;display:block;}
+.pp-num{font-size:5px;color:#aaa;line-height:1;font-family:'DM Sans',sans-serif;}
+.pp-name{font-size:5px;color:#333;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 1px;font-family:'DM Sans',sans-serif;line-height:1.2;}
+.pp-roman{font-family:'Press Start 2P',monospace;text-align:center;}
+.pp-gname{font-family:'Press Start 2P',monospace;text-align:center;opacity:.75;line-height:1.5;}
+.pp-cbadge{position:absolute;top:1px;right:1px;font-size:4px;font-weight:700;padding:1px 2px;border-radius:1px;line-height:1;}
+.pp-bm{background:rgba(234,179,8,.9);color:#000;}
+.pp-bg{background:rgba(74,222,128,.9);color:#000;}
+.pp-br{background:rgba(251,146,60,.9);color:#000;}
+.pp-bo{background:rgba(100,149,237,.9);color:#000;}
+
+@media print{
+  body>*{display:none!important;}
+  #print-overlay{display:block!important;position:static!important;overflow:visible!important;background:transparent!important;}
+  #print-ctrl{display:none!important;}
+  #print-pages-area{display:block!important;padding:0!important;overflow:visible!important;}
+  .pp-page{box-shadow:none!important;margin:0!important;}
+}
 </style>
 </head>
 <body>
@@ -156,11 +210,33 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
   <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
     <button class="hdr-btn" id="btn-add-page">+ Agregar hoja</button>
     <button class="hdr-btn primary" id="btn-add-vis">+ Agregar visibles</button>
+    <button class="hdr-btn primary" id="btn-print">🖨️ Imprimir</button>
     <button class="hdr-btn" id="btn-export">⬇ Exportar</button>
     <button class="hdr-btn" id="btn-import-wrap">⬆ Importar<input type="file" id="btn-import" accept=".json" style="display:none"></button>
     <button class="hdr-btn red" id="btn-clear">Limpiar</button>
   </div>
 </header>
+
+<!-- ── Print overlay ── -->
+<div id="print-overlay">
+  <div id="print-ctrl">
+    <div class="logo">POKÉDEX<br>BINDER</div>
+    <div class="hdiv"></div>
+    <div class="popt-group">
+      <span class="popt-lbl">Hojas por página</span>
+      <button class="popt-btn" data-pc="1" data-pr="1">1×1</button>
+      <button class="popt-btn" data-pc="2" data-pr="1">2×1</button>
+      <button class="popt-btn active" data-pc="2" data-pr="2">2×2</button>
+      <button class="popt-btn" data-pc="3" data-pr="2">3×2</button>
+      <button class="popt-btn" data-pc="3" data-pr="3">3×3</button>
+    </div>
+    <span id="print-info"></span>
+    <div class="hdiv"></div>
+    <button class="hdr-btn primary" onclick="window.print()">🖨️ Imprimir PDF</button>
+    <button class="hdr-btn" onclick="closePrintPreview()">✕ Cerrar</button>
+  </div>
+  <div id="print-pages-area"></div>
+</div>
 
 <div id="main">
   <aside id="lib">
@@ -976,6 +1052,126 @@ function load(){
     }
   }catch{}
 }
+
+// ── Print ─────────────────────────────────────────────────────────
+let printPpCols=2, printPpRows=2;
+
+function printImgUrl(card){
+  // Prefer rotomlabs (official artwork) for print quality, fallback to sprite base
+  return card.img || crotom(card) || csprite(card);
+}
+
+function buildPrintPages(){
+  const area=document.getElementById('print-pages-area');
+  area.innerHTML='';
+  if(!binder.length){ area.innerHTML='<div style="color:#999;font-size:13px;padding:40px">El binder está vacío</div>'; return; }
+
+  const spp=cols*rows;
+  const nBP=Math.ceil(binder.length/spp)||1;
+  const bpPerPaper=printPpCols*printPpRows;
+  const nPP=Math.ceil(nBP/bpPerPaper);
+  const totalCards=binder.filter(c=>c.type!=='intro'&&c.type!=='filler').length;
+
+  document.getElementById('print-info').textContent=`${nPP} pág${nPP!==1?'s':''} · ${totalCards} cartas · ${nBP} hojas`;
+
+  const LEGEND=[
+    {label:'Base',    sw:'border-color:#3B82F6;background:#3B82F611'},
+    {label:'Mega',    sw:'border-color:rgba(234,179,8,.7);background:#EAB30811'},
+    {label:'GMax',    sw:'border-color:rgba(74,222,128,.8);background:#4ADE8011'},
+    {label:'Regional',sw:'border-color:rgba(251,146,60,.7);background:#FB923C11'},
+    {label:'Otras',   sw:'border-color:rgba(100,149,237,.7);background:#63A3E911'},
+    {label:'Vacío',   sw:'border-color:#ccc;background:#f5f5f5;border-style:dashed'},
+  ];
+
+  for(let pp=0;pp<nPP;pp++){
+    const paperEl=document.createElement('div');
+    paperEl.className='pp-page';
+
+    // Header
+    const hdr=document.createElement('div');
+    hdr.className='pp-hdr';
+    hdr.innerHTML=`<div>
+      <div class="pp-title">POKÉDEX BINDER</div>
+      <div class="pp-legend">${LEGEND.map(l=>`<span class="pp-li"><span class="pp-sw" style="${l.sw}"></span>${l.label}</span>`).join('')}</div>
+    </div>
+    <div class="pp-sub">${totalCards} cartas · ${nBP} hojas · ${cols}×${rows} / hoja<br>Pág. ${pp+1} / ${nPP}</div>`;
+    paperEl.appendChild(hdr);
+
+    // Binder pages grid
+    const bpGrid=document.createElement('div');
+    bpGrid.className='pp-bpages';
+    bpGrid.style.gridTemplateColumns=`repeat(${printPpCols},1fr)`;
+    bpGrid.style.gridTemplateRows=`repeat(${printPpRows},1fr)`;
+
+    for(let b=0;b<bpPerPaper;b++){
+      const bpIdx=pp*bpPerPaper+b;
+      const bpEl=document.createElement('div');
+      bpEl.className='pp-bpage';
+      if(bpIdx>=nBP){ bpEl.style.cssText='background:transparent;border:none;'; bpGrid.appendChild(bpEl); continue; }
+
+      bpEl.innerHTML=`<div class="pp-bpage-lbl">Pág. ${bpIdx+1}</div>`;
+
+      const sg=document.createElement('div');
+      sg.className='pp-bgrid';
+      sg.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+      sg.style.gridTemplateRows=`repeat(${rows},1fr)`;
+
+      for(let s=0;s<spp;s++){
+        const cIdx=bpIdx*spp+s;
+        const card=binder[cIdx];
+        const sl=document.createElement('div');
+        sl.className='pp-slot';
+
+        if(!card){
+          sl.classList.add('pp-empty');
+        } else if(card.type==='filler'){
+          sl.classList.add('pp-filler');
+        } else if(card.type==='intro'){
+          sl.classList.add('pp-intro');
+          sl.style.background=`linear-gradient(145deg,${card.color}22,${card.color}44)`;
+          sl.style.borderColor=card.color+'99';
+          const big=card.label||card.roman||'?';
+          const fs=big.length>3?'7px':big.length===3?'9px':'11px';
+          sl.innerHTML=`<div class="pp-roman" style="color:${card.color};font-size:${fs}">${big}</div><div class="pp-gname" style="color:${card.color};font-size:3px">${card.name}</div>`;
+        } else {
+          const typeMap={mega:'pp-mega',gmax:'pp-gmax',alolan:'pp-regional',galarian:'pp-regional',hisuian:'pp-regional',paldean:'pp-regional',otras:'pp-otras'};
+          if(typeMap[card.s||card.type]) sl.classList.add(typeMap[card.s||card.type]);
+          const b=BADGE[card.s];
+          const nm=cname(card);
+          const num=cnum(card);
+          const imgUrl=printImgUrl(card);
+          const fb=csprite(card);
+          sl.innerHTML=`${b?`<div class="pp-cbadge pp-${b[1]}">${b[0]}</div>`:''}
+            ${imgUrl?`<img src="${imgUrl}" loading="lazy" onerror="this.src='${fb}';this.onerror=null" style="width:75%;aspect-ratio:1">`:''}
+            <span class="pp-num">#${String(num||'?').padStart(4,'0')}</span>
+            <span class="pp-name" title="${nm}">${nm.slice(0,10)}</span>`;
+        }
+        sg.appendChild(sl);
+      }
+      bpEl.appendChild(sg);
+      bpGrid.appendChild(bpEl);
+    }
+    paperEl.appendChild(bpGrid);
+    area.appendChild(paperEl);
+  }
+}
+
+function openPrintPreview(){
+  document.getElementById('print-overlay').classList.add('open');
+  buildPrintPages();
+}
+function closePrintPreview(){
+  document.getElementById('print-overlay').classList.remove('open');
+}
+
+document.getElementById('btn-print').addEventListener('click', openPrintPreview);
+document.querySelectorAll('.popt-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    printPpCols=+btn.dataset.pc; printPpRows=+btn.dataset.pr;
+    document.querySelectorAll('.popt-btn').forEach(b=>b.classList.toggle('active',b===btn));
+    buildPrintPages();
+  });
+});
 
 // ── Init ─────────────────────────────────────────────────────────
 async function init(){
